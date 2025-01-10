@@ -1,3 +1,5 @@
+"use client";
+
 import { FiHome, FiList, FiUser, FiSettings } from "react-icons/fi";
 import { motion } from "framer-motion";
 import clsx from "clsx";
@@ -34,7 +36,7 @@ const Sidebar = () => {
           <span className="mdmax:hidden">Dashboard</span>
         </a>
         <a
-          href="/challenges"
+          href="/dashboard/challenges"
           className={clsx(
             "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
             isActive("/challenges")
@@ -46,7 +48,7 @@ const Sidebar = () => {
           <span className="mdmax:hidden">My Challenges</span>
         </a>
         <a
-          href="/auditor-roles"
+          href="/dashboard/auditor-roles"
           className={clsx(
             "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
             isActive("/auditor-roles")
@@ -58,7 +60,7 @@ const Sidebar = () => {
           <span className="mdmax:hidden">Auditor Roles</span>
         </a>
         <a
-          href="/profile"
+          href="/dashboard/profile"
           className={clsx(
             "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
             isActive("/profile")
@@ -70,7 +72,7 @@ const Sidebar = () => {
           <span className="mdmax:hidden">Profile</span>
         </a>
         <a
-          href="/settings"
+          href="/dashboard/settings"
           className={clsx(
             "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
             isActive("/settings")

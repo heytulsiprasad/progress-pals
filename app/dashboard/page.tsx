@@ -5,7 +5,6 @@ import {
   clearCurrentUser,
   useCurrentUser,
 } from "../../redux/slices/currentUserSlice";
-import Sidebar from "../components/Sidebar";
 import { useState, useRef } from "react";
 import { FaCog, FaSignOutAlt } from "react-icons/fa";
 import useOutsideClick from "@/hooks/useOutsideClick";
@@ -38,9 +37,8 @@ const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
       {/* Main Content */}
-      <main className="flex-1 p-8">
+      <main className="flex-1">
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Welcome, {userName}!</h1>
