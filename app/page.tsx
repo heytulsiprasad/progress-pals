@@ -1,7 +1,44 @@
+"use client";
+
 import clsx from "clsx";
 import { FiExternalLink } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import { auth, db, provider, signInWithPopup } from "../firebaseConfig";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleGetStarted = async () => {
+    try {
+      // Sign in or sign up with Google
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if the user already exists in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        // Create a new user document if it doesn't exist
+        await setDoc(userDocRef, {
+          name: user.displayName || "Anonymous",
+          email: user.email,
+          photoURL: user.photoURL || null,
+          createdAt: new Date().toISOString(),
+        });
+        console.log("New user document created!");
+      } else {
+        console.log("User already exists in Firestore!");
+      }
+
+      //  Redirect to dashboard
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Error signing in: ", error);
+    }
+  };
+
   return (
     <div
       className={clsx(
@@ -12,7 +49,10 @@ export default function Home() {
       <header className="text-center py-16">
         <h1 className="text-6xl font-bold text-blue-600">ProgressPals</h1>
         <p className="mt-4 text-xl lgmax:text-2xl">Apes Together Strong 🦍</p>
-        <button className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition">
+        <button
+          onClick={handleGetStarted}
+          className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition"
+        >
           Get Started
         </button>
       </header>
