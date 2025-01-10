@@ -46,7 +46,7 @@ export default function Home() {
       <footer className="mt-16 text-center">
         <div className="flex justify-center space-x-6">
           <p className="italic text-sm">
-            Build after{" "}
+            Built after{" "}
             <a
               className="underline hover:text-blue-600 inline-flex items-center gap-1"
               target="_blank"
