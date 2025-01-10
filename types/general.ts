@@ -24,6 +24,7 @@ export interface Challenge {
   progress?: Progress[];
   auditors?: string[];
   pendingAuditors?: string[];
+  locked?: boolean; // if author wants no more auditors
 }
 
 export interface User {

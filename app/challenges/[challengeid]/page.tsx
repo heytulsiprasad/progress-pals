@@ -26,6 +26,7 @@ const ChallengeDetails = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -34,7 +35,9 @@ const ChallengeDetails = () => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setChallenge(docSnap.data() as Challenge);
+          const challengeData = docSnap.data() as Challenge;
+          setChallenge(challengeData);
+          setIsLocked(challengeData.locked || false);
         } else {
           console.error("No such document!");
         }
@@ -43,6 +46,16 @@ const ChallengeDetails = () => {
 
     fetchChallenge();
   }, [challengeid]);
+
+  const handleToggleLock = async () => {
+    if (challenge) {
+      const challengeRef = doc(db, "challenges", challenge.id);
+      await updateDoc(challengeRef, {
+        locked: !isLocked,
+      });
+      setIsLocked(!isLocked);
+    }
+  };
 
   if (!challenge) {
     return (
@@ -108,6 +121,17 @@ const ChallengeDetails = () => {
             </p>
           </div>
 
+          {/* Lock Toggle */}
+          <div className="mb-8 flex items-center">
+            <span className="mr-4">Mark as Locked</span>
+            <input
+              type="checkbox"
+              className="toggle"
+              defaultChecked={isLocked}
+              onChange={handleToggleLock}
+            />
+          </div>
+
           {/* Stats Grid */}
           <div className="grid grid-cols-2 mdmax:grid-cols-1 gap-6">
             <div className="stats shadow">
@@ -154,16 +178,18 @@ const ChallengeDetails = () => {
 
                 <div className="avatar-group -space-x-6">
                   {/* When there are no auditors (and is being seen by creator himself) */}
-                  {!challenge?.auditors && challenge.creator === uid && (
-                    <span
-                      className={clsx(
-                        "px-2 py-1 rounded-full text-sm font-medium",
-                        "bg-green-100 text-green-700"
-                      )}
-                    >
-                      Looking for auditors
-                    </span>
-                  )}
+                  {(!challenge?.auditors ||
+                    challenge?.auditors?.length === 0) &&
+                    challenge.creator === uid && (
+                      <span
+                        className={clsx(
+                          "px-2 py-1 rounded-full text-sm font-medium",
+                          "bg-green-100 text-green-700"
+                        )}
+                      >
+                        Looking for auditors
+                      </span>
+                    )}
 
                   {/* When being seen by any other user */}
                   {!challenge?.auditors && challenge.creator !== uid && (

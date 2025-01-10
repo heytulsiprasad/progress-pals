@@ -9,7 +9,7 @@ import { FaCog, FaSignOutAlt } from "react-icons/fa";
 import useOutsideClick from "@/hooks/useOutsideClick";
 import { useDispatch } from "react-redux";
 import { auth, db } from "@/firebaseConfig";
-import { getChallenges } from "../services/challengeService";
+import { getOpenChallenges } from "../services/challengeService";
 import { Challenge, Notification } from "@/types/general";
 import ChallengeBox from "../components/ChallengeBox";
 import Image from "next/image";
@@ -36,8 +36,10 @@ const Dashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const dispatch = useDispatch();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[] | null>(null);
+  const [notifications, setNotifications] = useState<Notification[] | null>(
+    null
+  );
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -56,11 +58,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchChallenges = async () => {
-      const allChallenges = await getChallenges();
-      const openChallenges = allChallenges.filter(
-        (challenge) => challenge.creator !== uid
-      );
-      setChallenges(openChallenges);
+      const allOpenChallenges = await getOpenChallenges(uid);
+      setChallenges(allOpenChallenges);
     };
 
     const fetchNotifications = async () => {
@@ -145,33 +144,56 @@ const Dashboard = () => {
             )}
           </div>
         </header>
-        <section>
-          <h2 className="text-xl font-bold mb-4">
-            Open Challenges for You to Audit
-          </h2>
-          <div className="grid grid-cols-2 mdmax:grid-cols-1 gap-4">
-            {challenges.map((challenge) => (
-              <ChallengeBox challenge={challenge} key={challenge.id} />
-            ))}
-          </div>
-        </section>
-        <section className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Notifications</h2>
-          <div className="space-y-4">
-            {notifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onAction={handleNotificationAction}
-              />
-            ))}
 
-            {notifications.length === 0 && (
-              <div className="text-gray-500 text-center py-8">
+        {/* Notifications */}
+        <section className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Notifications</h2>
+          <div className="space-y-4 w-full">
+            {notifications === null ? (
+              <div className="flex justify-center w-full">
+                <span className="loading loading-spinner loading-lg text-primary"></span>
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onAction={handleNotificationAction}
+                />
+              ))
+            )}
+
+            {notifications && notifications.length === 0 && (
+              <div className="text-gray-500 text-left">
                 You&apos;re all caught up!
               </div>
             )}
           </div>
+        </section>
+
+        {/* Open challenges */}
+        <section>
+          <h2 className="text-xl font-bold mb-4">
+            Open Challenges for you to Audit
+          </h2>
+          {challenges === null ? (
+            <div className="flex justify-center w-full">
+              <span className="loading loading-spinner loading-lg text-primary"></span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 mdmax:grid-cols-1 gap-4 w-full">
+              {challenges.map((challenge) => (
+                <ChallengeBox challenge={challenge} key={challenge.id} />
+              ))}
+            </div>
+          )}
+
+          {/* When no challenges exist */}
+          {challenges && challenges.length === 0 && (
+            <div className="text-gray-500 text-left">
+              No open challenges for you to audit!
+            </div>
+          )}
         </section>
       </main>
     </div>
