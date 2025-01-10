@@ -1,7 +1,7 @@
 "use client";
 
 import { useCurrentUser } from "../../redux/slices/currentUserSlice";
-import { FiHome, FiList, FiUser, FiSettings } from "react-icons/fi";
+import Sidebar from "../components/sidebar";
 
 /**
  * Dashboard for signed-in users.
@@ -11,32 +11,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg sticky top-0 h-screen">
-        <nav className="flex flex-col p-4 space-y-4">
-          <a href="/dashboard" className="flex items-center space-x-2">
-            <FiHome />
-            <span>Dashboard</span>
-          </a>
-          <a href="/challenges" className="flex items-center space-x-2">
-            <FiList />
-            <span>My Challenges</span>
-          </a>
-          <a href="/auditor-roles" className="flex items-center space-x-2">
-            <FiUser />
-            <span>Auditor Roles</span>
-          </a>
-          <a href="/profile" className="flex items-center space-x-2">
-            <FiUser />
-            <span>Profile</span>
-          </a>
-          <a href="/settings" className="flex items-center space-x-2">
-            <FiSettings />
-            <span>Settings</span>
-          </a>
-        </nav>
-      </aside>
-
+      <Sidebar />
       {/* Main Content */}
       <main className="flex-1 p-8">
         {/* Header */}
