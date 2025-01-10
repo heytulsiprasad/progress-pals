@@ -39,10 +39,13 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
       creator: uid,
       startDate: new Date(challengeData.startTime).toISOString(),
       endDate: new Date(challengeData.endTime).toISOString(),
+      pendingAuditors: [],
+      auditors: [],
     };
 
     try {
       const docRef = await addDoc(collection(db, "challenges"), newChallenge);
+      await updateDoc(docRef, { id: docRef.id }); // Update the document with its own ID
       await updateDoc(doc(db, "users", uid), {
         challenges: [
           ...((await (await getDoc(doc(db, "users", uid))).data()
@@ -50,7 +53,7 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
           docRef.id,
         ],
       });
-      onSubmit(newChallenge);
+      onSubmit({ ...newChallenge, id: docRef.id });
       router.push(`/challenges/${docRef.id}`);
     } catch (error) {
       console.error("Error adding document: ", error);

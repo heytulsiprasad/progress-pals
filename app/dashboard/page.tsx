@@ -8,21 +8,36 @@ import { useState, useRef, useEffect } from "react";
 import { FaCog, FaSignOutAlt } from "react-icons/fa";
 import useOutsideClick from "@/hooks/useOutsideClick";
 import { useDispatch } from "react-redux";
-import { auth } from "@/firebaseConfig";
+import { auth, db } from "@/firebaseConfig";
 import { getChallenges } from "../services/challengeService";
-import { Challenge } from "@/types/general";
+import { Challenge, Notification } from "@/types/general";
 import ChallengeBox from "../components/ChallengeBox";
 import Image from "next/image";
+import {
+  getNotifications,
+  updateNotificationStatus,
+} from "../services/notificationService";
+import NotificationItem from "../components/NotificationItem";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayRemove,
+  arrayUnion,
+} from "firebase/firestore";
+import toast from "react-hot-toast";
 
 /**
  * Dashboard for signed-in users.
  */
 const Dashboard = () => {
   const { name: userName, uid, photoURL } = useCurrentUser();
+  console.log(uid);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const dispatch = useDispatch();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -48,8 +63,53 @@ const Dashboard = () => {
       setChallenges(openChallenges);
     };
 
+    const fetchNotifications = async () => {
+      const userNotifications = await getNotifications(uid);
+      setNotifications(userNotifications);
+    };
+
     fetchChallenges();
+    fetchNotifications();
   }, [uid]);
+
+  const handleNotificationAction = async (
+    notificationId: string,
+    action: "accept" | "reject"
+  ) => {
+    // Get the notification to find challengeId
+    const notificationRef = doc(db, "notifications", notificationId);
+    const notificationDoc = await getDoc(notificationRef);
+    const notification = notificationDoc.data() as Notification;
+
+    if (notification && notification.challengeId) {
+      const challengeRef = doc(db, "challenges", notification.challengeId);
+
+      // Remove from pendingAuditors
+      await updateDoc(challengeRef, {
+        pendingAuditors: arrayRemove(notification.author),
+      });
+
+      // If accepted, add to auditors
+      if (action === "accept") {
+        await updateDoc(challengeRef, {
+          auditors: arrayUnion(notification.author),
+        });
+      }
+
+      // Update notification status
+      await updateNotificationStatus(notificationId, action);
+
+      // Update local state
+      setNotifications(notifications.filter((n) => n.id !== notificationId));
+
+      // Send toast
+      if (action === "accept") {
+        toast.success("Auditor request accepted!");
+      } else {
+        toast.error("Auditor request rejected!");
+      }
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -93,6 +153,24 @@ const Dashboard = () => {
             {challenges.map((challenge) => (
               <ChallengeBox challenge={challenge} key={challenge.id} />
             ))}
+          </div>
+        </section>
+        <section className="mt-8">
+          <h2 className="text-xl font-bold mb-4">Notifications</h2>
+          <div className="space-y-4">
+            {notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onAction={handleNotificationAction}
+              />
+            ))}
+
+            {notifications.length === 0 && (
+              <div className="text-gray-500 text-center py-8">
+                You&apos;re all caught up!
+              </div>
+            )}
           </div>
         </section>
       </main>

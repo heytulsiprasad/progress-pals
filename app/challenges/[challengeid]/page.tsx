@@ -3,15 +3,29 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { db } from "@/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
-import { Challenge, ChallengeStatus } from "@/types/general";
+import {
+  doc,
+  getDoc,
+  addDoc,
+  collection,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
+import { Challenge, ChallengeStatus, NotificationType } from "@/types/general";
 import ProgressSection from "@/app/components/ProgressSection";
 import UserAvatar from "@/app/components/UserAvatar";
 import clsx from "clsx";
+import { useCurrentUser } from "@/redux/slices/currentUserSlice";
+import Modal from "@/app/components/Modal"; // Assuming you have a Modal component
+import { AnimatePresence, motion } from "framer-motion";
 
 const ChallengeDetails = () => {
   const { challengeid } = useParams();
+  const { uid, name: userName } = useCurrentUser();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -37,6 +51,47 @@ const ChallengeDetails = () => {
       </div>
     );
   }
+
+  const handleApplyAsAuditor = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleApply = async () => {
+    setIsLoading(true);
+    if (challenge) {
+      // Add to pendingAuditors in Challenge
+      // We do this because we can know who all have applied to be auditors
+      // and make the button text "Already applied"
+      const challengeRef = doc(db, "challenges", challenge.id);
+      await updateDoc(challengeRef, {
+        pendingAuditors: arrayUnion(uid),
+      });
+
+      // Update local state (challenge)
+      setChallenge((prevChallenge) => {
+        if (prevChallenge) {
+          return {
+            ...prevChallenge,
+            pendingAuditors: [...(prevChallenge.pendingAuditors || []), uid],
+          };
+        }
+        return prevChallenge;
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        recipient: challenge.creator,
+        author: uid,
+        message,
+        type: NotificationType.AUDITOR_REQUEST,
+        read: false,
+        challengeId: challenge.id,
+        accepted: false,
+      });
+      setIsLoading(false);
+      setIsModalOpen(false);
+      setMessage("");
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -97,17 +152,34 @@ const ChallengeDetails = () => {
               <div className="card-body">
                 <h3 className="card-title text-xl">Auditors</h3>
 
-                {/* When there are no auditors */}
                 <div className="avatar-group -space-x-6">
-                  {!challenge?.auditors && (
+                  {/* When there are no auditors (and is being seen by creator himself) */}
+                  {!challenge?.auditors && challenge.creator === uid && (
                     <span
                       className={clsx(
                         "px-2 py-1 rounded-full text-sm font-medium",
                         "bg-green-100 text-green-700"
                       )}
                     >
-                      Open for Auditors
+                      Looking for auditors
                     </span>
+                  )}
+
+                  {/* When being seen by any other user */}
+                  {!challenge?.auditors && challenge.creator !== uid && (
+                    <button
+                      className={clsx(
+                        "btn btn-sm",
+                        challenge?.pendingAuditors?.includes(uid)
+                          ? "btn-secondary"
+                          : "btn-primary "
+                      )}
+                      onClick={handleApplyAsAuditor}
+                    >
+                      {challenge?.pendingAuditors?.includes(uid)
+                        ? "Already applied"
+                        : "Apply as Auditor"}
+                    </button>
                   )}
                 </div>
 
@@ -146,12 +218,41 @@ const ChallengeDetails = () => {
             </div>
           </div>
 
-          <ProgressSection
-            progress={challenge.progress || []}
-            challengeId={challenge.id}
-          />
+          <ProgressSection challenge={challenge} />
         </div>
       </div>
+
+      {/* Modal for applying as auditor */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <Modal onClose={() => setIsModalOpen(false)}>
+            <motion.div
+              className="p-4"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold mb-4">Apply as Auditor</h2>
+              <textarea
+                className="w-full p-2 border rounded mb-4"
+                placeholder="Add a message (optional)"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+              <button
+                className={clsx("btn btn-primary", {
+                  "btn-loading": isLoading,
+                })}
+                onClick={handleApply}
+                disabled={isLoading}
+              >
+                {isLoading ? "Applying..." : "Apply"}
+              </button>
+            </motion.div>
+          </Modal>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

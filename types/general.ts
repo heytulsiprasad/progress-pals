@@ -23,6 +23,7 @@ export interface Challenge {
   creator: string;
   progress?: Progress[];
   auditors?: string[];
+  pendingAuditors?: string[];
 }
 
 export interface User {
@@ -32,4 +33,21 @@ export interface User {
   uid: string;
   createdAt: string;
   challenges?: string[];
+}
+
+export enum NotificationType {
+  AUDITOR_REQUEST = "auditor_request",
+  PROGRESS_UPDATE = "progress_update",
+}
+
+export interface Notification {
+  id: string; // Firestore document ID
+  author: string; // UID of the user who triggered the notification
+  recipient: string; // UID of the user receiving the notification
+  message: string; // Notification text
+  type: NotificationType; // Notification type
+  challengeId?: string; // Related challenge ID
+  createdAt: string; // Timestamp of the notification
+  read: boolean; // Whether the notification has been read
+  status?: string;
 }

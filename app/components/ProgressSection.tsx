@@ -1,12 +1,12 @@
 import Image from "next/image";
 import { useState } from "react";
 import { updateDoc, doc } from "firebase/firestore";
-import { Progress } from "@/types/general";
+import { Challenge, Progress } from "@/types/general";
 import { db } from "@/firebaseConfig";
+import { useCurrentUser } from "@/redux/slices/currentUserSlice";
 
 interface ProgressSectionProps {
-  progress: Progress[];
-  challengeId: string;
+  challenge: Challenge;
 }
 
 const uploadImageToCloudinary = async (file: File): Promise<string> => {
@@ -46,15 +46,16 @@ const uploadImageToCloudinary = async (file: File): Promise<string> => {
   return data.secure_url;
 };
 
-export default function ProgressSection({
-  progress,
-  challengeId,
-}: ProgressSectionProps) {
+export default function ProgressSection({ challenge }: ProgressSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  const progress = challenge?.progress || [];
+
   const [localProgress, setLocalProgress] = useState<Progress[]>(progress);
+  const { uid } = useCurrentUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +71,7 @@ export default function ProgressSection({
         timestamp: new Date().toISOString(),
       };
 
-      await updateDoc(doc(db, "challenges", challengeId), {
+      await updateDoc(doc(db, "challenges", challenge.id), {
         progress: [...progress, newProgress],
       });
 
@@ -85,15 +86,18 @@ export default function ProgressSection({
 
   return (
     <div className="mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Progress Images</h2>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="btn btn-primary btn-sm"
-        >
-          Add Progress
-        </button>
-      </div>
+      {/* When user is not creator, don't show add progress button */}
+      {uid !== challenge.creator && (
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Progress Images</h2>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="btn btn-primary btn-sm"
+          >
+            Add Progress
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {localProgress?.map((item, index) => (

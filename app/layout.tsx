@@ -5,6 +5,7 @@ import "./globals.css";
 import ReduxProvider from "../redux/provider";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor } from "../redux/store";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Toaster />
         <ReduxProvider>
           <PersistGate loading={null} persistor={persistor}>
             {children}
