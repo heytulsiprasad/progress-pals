@@ -1,6 +1,6 @@
 "use client";
 
-import { FiBell, FiHome, FiList, FiUser } from "react-icons/fi";
+import { FiHome, FiList, FiUser } from "react-icons/fi";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
@@ -50,30 +50,17 @@ const Sidebar = () => {
             <span className="mdmax:hidden">My Challenges</span>
           </div>
         </Link>
-        <Link href="/dashboard/audits">
+        <Link href="/audits">
           <div
             className={clsx(
               "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
-              isActive("/dashboard/audits")
+              isActive("/audits")
                 ? "bg-blue-100 text-blue-600"
                 : "hover:bg-gray-100"
             )}
           >
             <FiUser />
             <span className="mdmax:hidden">My Audits</span>
-          </div>
-        </Link>
-        <Link href="/dashboard/notifications">
-          <div
-            className={clsx(
-              "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
-              isActive("/notifications")
-                ? "bg-blue-100 text-blue-600"
-                : "hover:bg-gray-100"
-            )}
-          >
-            <FiBell />
-            <span className="mdmax:hidden">Notifications</span>
           </div>
         </Link>
         {/* <Link href="/dashboard/profile">

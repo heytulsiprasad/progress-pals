@@ -86,18 +86,18 @@ export default function ProgressSection({ challenge }: ProgressSectionProps) {
 
   return (
     <div className="mt-8">
-      {/* When user is not creator, don't show add progress button */}
-      {uid !== challenge.creator && (
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Progress Images</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Progress Images</h2>
+        {/* When user is creator, then show add progress button */}
+        {uid === challenge.creator && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="btn btn-primary btn-sm"
           >
             Add Progress
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {localProgress?.map((item, index) => (
@@ -120,6 +120,13 @@ export default function ProgressSection({ challenge }: ProgressSectionProps) {
             </div>
           </div>
         ))}
+
+        {/* When there's no progress images yet, tell that */}
+        {localProgress.length === 0 && (
+          <div className="text-gray-500 text-left col-span-full">
+            No progress images yet
+          </div>
+        )}
       </div>
 
       {/* Upload Modal */}
