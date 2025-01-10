@@ -5,7 +5,7 @@ import {
   clearCurrentUser,
   useCurrentUser,
 } from "../../redux/slices/currentUserSlice";
-import Sidebar from "../components/sidebar";
+import Sidebar from "../components/Sidebar";
 import { useState, useRef } from "react";
 import { FaCog, FaSignOutAlt } from "react-icons/fa";
 import useOutsideClick from "@/hooks/useOutsideClick";

@@ -1,0 +1,112 @@
+[
+  {
+    "title": "Run a Marathon",
+    "description": "Complete a marathon by Feb 10",
+    "wagerAmount": 1000,
+    "startDate": "2025-01-10",
+    "endDate": "2025-02-10",
+    "status": "in_progress",
+    "creator": "userID1",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Read 10 Books",
+    "description": "Read 10 books by the end of the year",
+    "wagerAmount": 500,
+    "startDate": "2025-01-01",
+    "endDate": "2025-12-31",
+    "status": "in_progress",
+    "creator": "userID2",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Lose 10 Pounds",
+    "description": "Lose 10 pounds in 3 months",
+    "wagerAmount": 300,
+    "startDate": "2025-03-01",
+    "endDate": "2025-06-01",
+    "status": "in_progress",
+    "creator": "userID3",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Save $5000",
+    "description": "Save $5000 by the end of the year",
+    "wagerAmount": 200,
+    "startDate": "2025-01-01",
+    "endDate": "2025-12-31",
+    "status": "in_progress",
+    "creator": "userID4",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Learn a New Language",
+    "description": "Become fluent in Spanish",
+    "wagerAmount": 700,
+    "startDate": "2025-01-15",
+    "endDate": "2025-12-15",
+    "status": "in_progress",
+    "creator": "userID5",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Complete a Triathlon",
+    "description": "Finish a triathlon by summer",
+    "wagerAmount": 1000,
+    "startDate": "2025-04-01",
+    "endDate": "2025-08-01",
+    "status": "in_progress",
+    "creator": "userID6",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Write a Book",
+    "description": "Write and publish a book",
+    "wagerAmount": 1500,
+    "startDate": "2025-02-01",
+    "endDate": "2025-12-01",
+    "status": "in_progress",
+    "creator": "userID7",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Start a Business",
+    "description": "Launch a startup by the end of the year",
+    "wagerAmount": 2000,
+    "startDate": "2025-01-01",
+    "endDate": "2025-12-31",
+    "status": "in_progress",
+    "creator": "userID8",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Travel to 5 Countries",
+    "description": "Visit 5 new countries",
+    "wagerAmount": 1200,
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31",
+    "status": "completed",
+    "creator": "userID9",
+    "progress": [],
+    "auditors": null
+  },
+  {
+    "title": "Run 1000 Miles",
+    "description": "Run a total of 1000 miles",
+    "wagerAmount": 800,
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31",
+    "status": "completed",
+    "creator": "userID10",
+    "progress": [],
+    "auditors": null
+  }
+]
