@@ -9,6 +9,7 @@ export enum ChallengeStatus {
   UPCOMING = "upcoming",
   IN_PROGRESS = "in_progress",
   COMPLETED = "completed",
+  WAITING_FOR_REVIEW = "waiting_for_review",
   FAILED = "failed",
 }
 
@@ -39,6 +40,8 @@ export interface User {
 export enum NotificationType {
   AUDITOR_REQUEST = "auditor_request",
   PROGRESS_UPDATE = "progress_update",
+  REVIEW_REQUEST = "review_request",
+  FAILURE_NOTICE = "failure_notice",
 }
 
 export interface Notification {

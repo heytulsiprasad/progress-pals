@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { db } from "@/firebaseConfig";
+import { FaInfoCircle } from "react-icons/fa";
 import {
   doc,
   getDoc,
@@ -106,6 +107,64 @@ const ChallengeDetails = () => {
     }
   };
 
+  const handleMarkComplete = async () => {
+    const challengeRef = doc(db, "challenges", challenge.id);
+    await updateDoc(challengeRef, {
+      status: ChallengeStatus.WAITING_FOR_REVIEW,
+    });
+
+    // Notify auditors
+    for (const auditor of challenge.auditors || []) {
+      await addDoc(collection(db, "notifications"), {
+        recipient: auditor,
+        author: uid,
+        message: `${userName} has completed the challenge "${challenge.title}" and is waiting for review.`,
+        type: NotificationType.REVIEW_REQUEST,
+        read: false,
+        challengeId: challenge.id,
+      });
+    }
+
+    // Update local state
+    setChallenge((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: ChallengeStatus.WAITING_FOR_REVIEW,
+          }
+        : null
+    );
+  };
+
+  const handleMarkFailed = async () => {
+    const challengeRef = doc(db, "challenges", challenge.id);
+    await updateDoc(challengeRef, {
+      status: ChallengeStatus.FAILED,
+    });
+
+    // Notify auditors
+    for (const auditor of challenge.auditors || []) {
+      await addDoc(collection(db, "notifications"), {
+        recipient: auditor,
+        author: uid,
+        message: `${userName} has marked the challenge "${challenge.title}" as failed.`,
+        type: NotificationType.FAILURE_NOTICE,
+        read: false,
+        challengeId: challenge.id,
+      });
+    }
+
+    // Update local state
+    setChallenge((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: ChallengeStatus.FAILED,
+          }
+        : null
+    );
+  };
+
   return (
     <div className="container mx-auto p-6">
       <div className="card bg-base-100 shadow-xl">
@@ -130,6 +189,12 @@ const ChallengeDetails = () => {
               defaultChecked={isLocked}
               onChange={handleToggleLock}
             />
+            <div
+              className="tooltip ml-2"
+              data-tip="When locked people can't see your challenge in open challenges"
+            >
+              <FaInfoCircle className="text-primary" />
+            </div>
           </div>
 
           {/* Stats Grid */}
@@ -245,6 +310,26 @@ const ChallengeDetails = () => {
           </div>
 
           <ProgressSection challenge={challenge} />
+
+          {/* Completion Buttons */}
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <button
+              onClick={handleMarkComplete}
+              className={clsx(
+                "btn",
+                challenge.status === ChallengeStatus.WAITING_FOR_REVIEW
+                  ? "btn-primary"
+                  : "btn-success"
+              )}
+            >
+              {challenge.status === ChallengeStatus.WAITING_FOR_REVIEW
+                ? "Waiting for Review"
+                : "Mark as Complete"}
+            </button>
+            <button onClick={handleMarkFailed} className="btn btn-error">
+              Mark as Failed
+            </button>
+          </div>
         </div>
       </div>
 
