@@ -1,13 +1,40 @@
 "use client";
 
-import { useCurrentUser } from "../../redux/slices/currentUserSlice";
+import Image from "next/image";
+import {
+  clearCurrentUser,
+  useCurrentUser,
+} from "../../redux/slices/currentUserSlice";
 import Sidebar from "../components/sidebar";
+import { useState, useRef } from "react";
+import { FaCog, FaSignOutAlt } from "react-icons/fa";
+import useOutsideClick from "@/hooks/useOutsideClick";
+import { useDispatch } from "react-redux";
+import { auth } from "@/firebaseConfig";
 
 /**
  * Dashboard for signed-in users.
  */
 const Dashboard = () => {
-  const { name: userName } = useCurrentUser();
+  const { name: userName, photoURL } = useCurrentUser();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const dispatch = useDispatch();
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleLogout = () => {
+    dispatch(clearCurrentUser());
+    // Optionally, redirect to the landing page
+    window.location.href = "/";
+
+    // signout from firebase
+    auth.signOut();
+  };
+
+  useOutsideClick(dropdownRef, () => setDropdownOpen(false));
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -17,51 +44,33 @@ const Dashboard = () => {
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Welcome, {userName}!</h1>
-          {/* Optional: Add search bar or notifications icon */}
+          <div className="relative" ref={dropdownRef}>
+            <Image
+              src={photoURL || ""}
+              alt="Profile"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-full cursor-pointer hover:shadow-lg hover:shadow-gray-500/50 transition-shadow"
+              onClick={toggleDropdown}
+            />
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
+                <a
+                  href="/settings"
+                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  <FaCog className="mr-2" /> Settings
+                </a>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-gray-100"
+                >
+                  <FaSignOutAlt className="mr-2" /> Logout
+                </button>
+              </div>
+            )}
+          </div>
         </header>
-
-        {/* Challenge Summary Section */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Active Challenges</h2>
-          <div className="grid gap-4 grid-cols-3 md:grid-cols-1">
-            {/* Example challenge card */}
-            <div className="p-4 bg-white rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold">Challenge Title</h3>
-              <p>Progress: 50%</p>
-              <p>Deadline: 2023-12-31</p>
-            </div>
-            {/* Add more challenge cards as needed */}
-          </div>
-        </section>
-
-        {/* Progress Tracker */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Overall Progress</h2>
-          <div className="flex items-center space-x-4">
-            {/* Example circular progress chart */}
-            <div className="w-24 h-24 bg-blue-200 rounded-full flex items-center justify-center">
-              50%
-            </div>
-            <p>Keep it up!</p>
-          </div>
-        </section>
-
-        {/* Upcoming Tasks */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Upcoming Tasks</h2>
-          <ul className="list-disc pl-5">
-            {/* Example task */}
-            <li>Task 1</li>
-            {/* Add more tasks as needed */}
-          </ul>
-        </section>
-
-        {/* Call-to-Action Button */}
-        <div className="mb-8">
-          <button className="px-6 py-3 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition">
-            Create New Challenge
-          </button>
-        </div>
       </main>
     </div>
   );

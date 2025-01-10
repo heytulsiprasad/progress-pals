@@ -30,5 +30,8 @@ export default {
       // => @media (max-width: 639px) { ... }
     },
   },
-  plugins: [],
+  plugins: [
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("daisyui"),
+  ],
 } satisfies Config;

@@ -21,6 +21,7 @@ export default function Home() {
       // Dispatch user data to Redux store
       dispatch(
         setCurrentUser({
+          isAuth: true,
           uid: user.uid,
           name: user.displayName || "Anonymous",
           email: user.email || "",
@@ -35,7 +36,7 @@ export default function Home() {
       if (!userDoc.exists()) {
         // Create a new user document if it doesn't exist
         await setDoc(userDocRef, {
-          name: user.displayName || "Anonymous",
+          name: user?.displayName,
           email: user.email,
           photoURL: user.photoURL || null,
           createdAt: new Date().toISOString(),

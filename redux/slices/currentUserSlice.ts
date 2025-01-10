@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store";
 
 interface CurrentUserState {
+  isAuth: boolean;
   uid: string;
   name: string;
   email?: string;
@@ -10,6 +11,7 @@ interface CurrentUserState {
 }
 
 const initialState: CurrentUserState = {
+  isAuth: false,
   uid: "",
   name: "",
   email: "",
@@ -21,12 +23,14 @@ const currentUserSlice = createSlice({
   initialState,
   reducers: {
     setCurrentUser: (state, action: PayloadAction<CurrentUserState>) => {
+      state.isAuth = action.payload.isAuth;
       state.uid = action.payload.uid;
       state.name = action.payload.name;
       state.email = action.payload.email;
       state.photoURL = action.payload.photoURL;
     },
     clearCurrentUser: (state) => {
+      state.isAuth = false;
       state.uid = "";
       state.name = "";
       state.email = "";
