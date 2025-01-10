@@ -6,6 +6,8 @@ import { db } from "@/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import { Challenge, ChallengeStatus } from "@/types/general";
 import ProgressSection from "@/app/components/ProgressSection";
+import UserAvatar from "@/app/components/UserAvatar";
+import clsx from "clsx";
 
 const ChallengeDetails = () => {
   const { challengeid } = useParams();
@@ -41,7 +43,7 @@ const ChallengeDetails = () => {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           {/* Header Section */}
-          <div className="text-center mb-8">
+          <div className="mb-8">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {challenge.title}
             </h1>
@@ -52,7 +54,7 @@ const ChallengeDetails = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 mdmax:grid-cols-1 gap-6">
             <div className="stats shadow">
               <div className="stat">
                 <div className="stat-title">Wager Amount</div>
@@ -82,6 +84,44 @@ const ChallengeDetails = () => {
             </div>
           </div>
 
+          {/* Creator and Auditors Section */}
+          <div className="mt-8 grid grid-cols-2 mdmax:grid-cols-1 gap-6">
+            <div className="card bg-base-200">
+              <div className="card-body">
+                <h3 className="card-title text-xl mb-2">Creator</h3>
+                <UserAvatar uid={challenge.creator} />
+              </div>
+            </div>
+
+            <div className="card bg-base-200">
+              <div className="card-body">
+                <h3 className="card-title text-xl">Auditors</h3>
+
+                {/* When there are no auditors */}
+                <div className="avatar-group -space-x-6">
+                  {!challenge?.auditors && (
+                    <span
+                      className={clsx(
+                        "px-2 py-1 rounded-full text-sm font-medium",
+                        "bg-green-100 text-green-700"
+                      )}
+                    >
+                      Open for Auditors
+                    </span>
+                  )}
+                </div>
+
+                {challenge.auditors && challenge.auditors.length > 0 && (
+                  <div className="avatar-group -space-x-6">
+                    {challenge.auditors.map((auditor, index) => (
+                      <UserAvatar key={index} uid={auditor} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Timeline Section */}
           <div className="mt-8">
             <div className="card bg-base-200">
@@ -104,47 +144,6 @@ const ChallengeDetails = () => {
                 </ul>
               </div>
             </div>
-          </div>
-
-          {/* Creator and Auditors Section */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="card bg-base-200">
-              <div className="card-body">
-                <h3 className="card-title text-xl">Creator</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="avatar placeholder">
-                    <div className="bg-neutral-focus text-neutral-content rounded-full w-12">
-                      <span>{challenge.creator[0]}</span>
-                    </div>
-                  </div>
-                  <span className="text-lg">{challenge.creator}</span>
-                </div>
-              </div>
-            </div>
-
-            {challenge.auditors && challenge.auditors.length > 0 && (
-              <div className="card bg-base-200">
-                <div className="card-body">
-                  <h3 className="card-title text-xl">Auditors</h3>
-                  <div className="avatar-group -space-x-6">
-                    {challenge.auditors.map((auditor, index) => (
-                      <div key={index} className="avatar placeholder">
-                        <div className="bg-neutral-focus text-neutral-content rounded-full w-12">
-                          <span>{auditor[0]}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4">
-                    {challenge.auditors.map((auditor, index) => (
-                      <div key={index} className="badge badge-outline m-1">
-                        {auditor}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <ProgressSection

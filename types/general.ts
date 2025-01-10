@@ -24,3 +24,12 @@ export interface Challenge {
   progress?: Progress[];
   auditors?: string[];
 }
+
+export interface User {
+  name: string;
+  photoURL: string;
+  email: string;
+  uid: string;
+  createdAt: string;
+  challenges?: string[];
+}

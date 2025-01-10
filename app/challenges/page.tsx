@@ -68,16 +68,23 @@ const Challenges = () => {
       {/* Active Challenges Grid */}
       <div>
         <h2 className="text-xl font-bold mb-4">Active Challenges</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeChallenges.map((challenge, index) => (
-            <ChallengeBox key={index} challenge={challenge} />
+        <div className="grid grid-cols-2 mdmax:grid-cols-2 gap-4">
+          {/* When active challenges are empty */}
+          {activeChallenges.length === 0 && (
+            <div className="text-gray-500 text-left col-span-full">
+              No active challenges yet.
+            </div>
+          )}
+
+          {activeChallenges.map((challenge) => (
+            <ChallengeBox key={challenge.id} challenge={challenge} />
           ))}
         </div>
       </div>
       {/* Completed Challenges Grid */}
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-4">Completed Challenges</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 mdmax:grid-cols-2 gap-4">
           {/* When completed challenges are empty */}
           {completedChallenges.length === 0 && (
             <div className="text-gray-500 text-left col-span-full">
@@ -85,8 +92,8 @@ const Challenges = () => {
             </div>
           )}
 
-          {completedChallenges.map((challenge, index) => (
-            <ChallengeBox key={index} challenge={challenge} />
+          {completedChallenges.map((challenge) => (
+            <ChallengeBox key={challenge.id} challenge={challenge} />
           ))}
         </div>
       </div>

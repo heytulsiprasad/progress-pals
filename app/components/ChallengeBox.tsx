@@ -2,6 +2,7 @@ import { Challenge, ChallengeStatus } from "@/types/general";
 import { formatDistanceToNow } from "date-fns";
 import clsx from "clsx";
 import Link from "next/link";
+import UserAvatar from "./UserAvatar";
 
 interface ChallengeProps {
   challenge: Challenge;
@@ -39,9 +40,26 @@ const ChallengeBox = ({ challenge }: ChallengeProps) => {
     >
       <div className="flex flex-col h-full">
         <div className="space-y-2 mb-2">
-          <h2 className="text-xl font-bold tracking-tight">
-            {challenge.title}
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold tracking-tight">
+              {challenge.title}
+            </h2>
+            <span
+              className={clsx("px-2 py-1 rounded-full text-xs font-medium", {
+                "bg-violet-400 text-black":
+                  challenge.status === ChallengeStatus.UPCOMING,
+                "bg-yellow-100 text-yellow-700":
+                  challenge.status === ChallengeStatus.IN_PROGRESS,
+                "bg-green-100 text-green-700":
+                  challenge.status === ChallengeStatus.COMPLETED,
+                "bg-red-100 text-red-700":
+                  challenge.status !== ChallengeStatus.IN_PROGRESS &&
+                  challenge.status !== ChallengeStatus.COMPLETED,
+              })}
+            >
+              {getStatusName(challenge.status)}
+            </span>
+          </div>
           <p className="text-gray-600 text-sm line-clamp-2">
             {challenge.description}
           </p>
@@ -66,22 +84,10 @@ const ChallengeBox = ({ challenge }: ChallengeProps) => {
               })}
             </p>
           </div>
-          <div className="flex items-center justify-end">
-            <span
-              className={clsx("px-2 py-1 rounded-full text-xs font-medium", {
-                "bg-violet-400 text-black":
-                  challenge.status === ChallengeStatus.UPCOMING,
-                "bg-yellow-100 text-yellow-700":
-                  challenge.status === ChallengeStatus.IN_PROGRESS,
-                "bg-green-100 text-green-700":
-                  challenge.status === ChallengeStatus.COMPLETED,
-                "bg-red-100 text-red-700":
-                  challenge.status !== ChallengeStatus.IN_PROGRESS &&
-                  challenge.status !== ChallengeStatus.COMPLETED,
-              })}
-            >
-              {getStatusName(challenge.status)}
-            </span>
+
+          {/* Creator info moved to bottom right */}
+          <div className="flex justify-end mt-2">
+            <UserAvatar uid={challenge.creator} />
           </div>
         </div>
       </div>

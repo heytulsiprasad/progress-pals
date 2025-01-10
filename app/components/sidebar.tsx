@@ -1,6 +1,6 @@
 "use client";
 
-import { FiHome, FiList, FiUser, FiSettings } from "react-icons/fi";
+import { FiHome, FiList, FiUser } from "react-icons/fi";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
@@ -8,7 +8,7 @@ import Link from "next/link";
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const currentPath = pathname;
+  // const currentPath = pathname;
   const isActive = (path: string) => pathname.includes(path);
 
   return (
@@ -63,7 +63,7 @@ const Sidebar = () => {
             <span className="mdmax:hidden">Auditor Roles</span>
           </div>
         </Link>
-        <Link href="/dashboard/profile">
+        {/* <Link href="/dashboard/profile">
           <div
             className={clsx(
               "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
@@ -88,7 +88,7 @@ const Sidebar = () => {
             <FiSettings />
             <span className="mdmax:hidden">Settings</span>
           </div>
-        </Link>
+        </Link> */}
       </nav>
     </motion.aside>
   );

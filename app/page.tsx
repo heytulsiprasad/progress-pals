@@ -41,9 +41,6 @@ export default function Home() {
           photoURL: user.photoURL || null,
           createdAt: new Date().toISOString(),
         });
-        console.log("New user document created!");
-      } else {
-        console.log("User already exists in Firestore!");
       }
 
       //  Redirect to dashboard
