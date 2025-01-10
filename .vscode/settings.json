@@ -1,0 +1,8 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll": "explicit",
+    "source.removeUnusedImports": "always"
+  },
+  "editor.formatOnSave": true
+}
