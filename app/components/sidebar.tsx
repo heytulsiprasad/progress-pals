@@ -4,10 +4,12 @@ import { FiHome, FiList, FiUser, FiSettings } from "react-icons/fi";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const isActive = (path: string) => pathname === path;
+  const currentPath = pathname;
+  const isActive = (path: string) => pathname.includes(path);
 
   return (
     <motion.aside
@@ -23,7 +25,7 @@ const Sidebar = () => {
           </span>
           <span className="text-2xl font-bold mdmax:hidden">Progress Pals</span>
         </div>
-        <a
+        <Link
           href="/dashboard"
           className={clsx(
             "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
@@ -34,55 +36,59 @@ const Sidebar = () => {
         >
           <FiHome />
           <span className="mdmax:hidden">Dashboard</span>
-        </a>
-        <a
-          href="/dashboard/challenges"
-          className={clsx(
-            "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
-            isActive("/challenges")
-              ? "bg-blue-100 text-blue-600"
-              : "hover:bg-gray-100"
-          )}
-        >
-          <FiList />
-          <span className="mdmax:hidden">My Challenges</span>
-        </a>
-        <a
-          href="/dashboard/auditor-roles"
-          className={clsx(
-            "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
-            isActive("/auditor-roles")
-              ? "bg-blue-100 text-blue-600"
-              : "hover:bg-gray-100"
-          )}
-        >
-          <FiUser />
-          <span className="mdmax:hidden">Auditor Roles</span>
-        </a>
-        <a
-          href="/dashboard/profile"
-          className={clsx(
-            "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
-            isActive("/profile")
-              ? "bg-blue-100 text-blue-600"
-              : "hover:bg-gray-100"
-          )}
-        >
-          <FiUser />
-          <span className="mdmax:hidden">Profile</span>
-        </a>
-        <a
-          href="/dashboard/settings"
-          className={clsx(
-            "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
-            isActive("/settings")
-              ? "bg-blue-100 text-blue-600"
-              : "hover:bg-gray-100"
-          )}
-        >
-          <FiSettings />
-          <span className="mdmax:hidden">Settings</span>
-        </a>
+        </Link>
+        <Link href="/challenges">
+          <div
+            className={clsx(
+              "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
+              isActive("/challenges")
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-100"
+            )}
+          >
+            <FiList />
+            <span className="mdmax:hidden">My Challenges</span>
+          </div>
+        </Link>
+        <Link href="/dashboard/auditor-roles">
+          <div
+            className={clsx(
+              "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
+              isActive("/auditor-roles")
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-100"
+            )}
+          >
+            <FiUser />
+            <span className="mdmax:hidden">Auditor Roles</span>
+          </div>
+        </Link>
+        <Link href="/dashboard/profile">
+          <div
+            className={clsx(
+              "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
+              isActive("/profile")
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-100"
+            )}
+          >
+            <FiUser />
+            <span className="mdmax:hidden">Profile</span>
+          </div>
+        </Link>
+        <Link href="/dashboard/settings">
+          <div
+            className={clsx(
+              "flex items-center space-x-3 p-3 rounded-lg transition mdmax:justify-center mdmax:space-x-0",
+              isActive("/settings")
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-100"
+            )}
+          >
+            <FiSettings />
+            <span className="mdmax:hidden">Settings</span>
+          </div>
+        </Link>
       </nav>
     </motion.aside>
   );

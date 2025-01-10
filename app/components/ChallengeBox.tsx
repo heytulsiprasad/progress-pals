@@ -1,6 +1,7 @@
-import { Challenge } from "@/types/general";
+import { Challenge, ChallengeStatus } from "@/types/general";
 import { formatDistanceToNow } from "date-fns";
 import clsx from "clsx";
+import Link from "next/link";
 
 interface ChallengeProps {
   challenge: Challenge;
@@ -11,18 +12,22 @@ interface ChallengeProps {
  */
 const getStatusName = (status: string) => {
   switch (status) {
-    case "in_progress":
+    case ChallengeStatus.IN_PROGRESS:
       return "In Progress";
-    case "completed":
+    case ChallengeStatus.COMPLETED:
       return "Completed";
+    case ChallengeStatus.FAILED:
+      return "Failed";
+    case ChallengeStatus.UPCOMING:
     default:
-      return "Pending";
+      return "Upcoming";
   }
 };
 
 const ChallengeBox = ({ challenge }: ChallengeProps) => {
   return (
-    <div
+    <Link
+      href={`/challenges/${challenge.id}`}
       className={clsx(
         "border p-6 rounded-xl shadow-sm transform transition-all duration-200 hover:scale-102 hover:shadow-lg",
         {
@@ -64,12 +69,15 @@ const ChallengeBox = ({ challenge }: ChallengeProps) => {
           <div className="flex items-center justify-end">
             <span
               className={clsx("px-2 py-1 rounded-full text-xs font-medium", {
+                "bg-violet-400 text-black":
+                  challenge.status === ChallengeStatus.UPCOMING,
                 "bg-yellow-100 text-yellow-700":
-                  challenge.status === "in_progress",
-                "bg-green-100 text-green-700": challenge.status === "completed",
+                  challenge.status === ChallengeStatus.IN_PROGRESS,
+                "bg-green-100 text-green-700":
+                  challenge.status === ChallengeStatus.COMPLETED,
                 "bg-red-100 text-red-700":
-                  challenge.status !== "in_progress" &&
-                  challenge.status !== "completed",
+                  challenge.status !== ChallengeStatus.IN_PROGRESS &&
+                  challenge.status !== ChallengeStatus.COMPLETED,
               })}
             >
               {getStatusName(challenge.status)}
@@ -77,7 +85,7 @@ const ChallengeBox = ({ challenge }: ChallengeProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

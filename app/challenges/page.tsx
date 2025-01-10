@@ -1,14 +1,13 @@
 "use client";
 
-import { useCurrentUser } from "../../../redux/slices/currentUserSlice";
+import { useCurrentUser } from "../../redux/slices/currentUserSlice";
 import { useState, useEffect } from "react";
 import { FaPlus } from "react-icons/fa";
 import { Challenge } from "@/types/general";
 import { db } from "@/firebaseConfig";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import mockChallenges from "../../../mockChallenges.json";
-import ChallengeBox from "../../components/ChallengeBox";
-import ChallengeModal from "../../components/ChallengeModal";
+import ChallengeBox from "../components/ChallengeBox";
+import ChallengeModal from "../components/ChallengeModal";
 
 /**
  * Challenges page for signed-in users.
@@ -46,11 +45,11 @@ const Challenges = () => {
     handleCloseModal();
   };
 
-  const activeChallenges = mockChallenges.filter(
+  const activeChallenges = challenges.filter(
     (challenge) => challenge.status !== "completed"
   ) as unknown as Challenge[];
 
-  const completedChallenges = mockChallenges.filter(
+  const completedChallenges = challenges.filter(
     (challenge) => challenge.status === "completed"
   ) as unknown as Challenge[];
 
@@ -79,6 +78,13 @@ const Challenges = () => {
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-4">Completed Challenges</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* When completed challenges are empty */}
+          {completedChallenges.length === 0 && (
+            <div className="text-gray-500 text-left col-span-full">
+              No completed challenges yet.
+            </div>
+          )}
+
           {completedChallenges.map((challenge, index) => (
             <ChallengeBox key={index} challenge={challenge} />
           ))}

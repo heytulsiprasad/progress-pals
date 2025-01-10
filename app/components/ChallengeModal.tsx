@@ -34,6 +34,7 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
     setIsLoading(true);
     const newChallenge: Challenge = {
       ...challengeData,
+      id: "",
       status: ChallengeStatus.UPCOMING,
       creator: uid,
       startDate: new Date(challengeData.startTime).toISOString(),
@@ -50,7 +51,7 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
         ],
       });
       onSubmit(newChallenge);
-      router.push(`/dashboard/challenges/${docRef.id}`);
+      router.push(`/challenges/${docRef.id}`);
     } catch (error) {
       console.error("Error adding document: ", error);
     } finally {

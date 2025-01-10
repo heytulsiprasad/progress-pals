@@ -1,6 +1,7 @@
-type Progress = {
+export type Progress = {
   proofType: "photo";
   url: string;
+  description?: string;
   timestamp: string;
 };
 
@@ -12,6 +13,7 @@ export enum ChallengeStatus {
 }
 
 export interface Challenge {
+  id: string;
   title: string;
   description: string;
   wagerAmount: number;
