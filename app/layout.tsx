@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ReduxProvider from "../redux/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,12 +13,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-export const metadata: Metadata = {
-  title: "ProgressPals - Apes Together Strong 🦍",
-  description:
-    "Join ProgressPals to set challenges, stay accountable, and achieve your goals with the support of your community.",
-};
 
 export default function RootLayout({
   children,
@@ -34,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ReduxProvider>{children}</ReduxProvider>
       </body>
     </html>
   );

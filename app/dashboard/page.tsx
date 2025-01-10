@@ -1,29 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { auth, db } from "../../firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { useCurrentUser } from "../../redux/slices/currentUserSlice";
 import { FiHome, FiList, FiUser, FiSettings } from "react-icons/fi";
 
 /**
  * Dashboard for signed-in users.
  */
 const Dashboard = () => {
-  const [userName, setUserName] = useState("");
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUserName(userDoc.data().name);
-        }
-      }
-    };
-    fetchUserData();
-  }, []);
+  const { name: userName } = useCurrentUser();
 
   return (
     <div className="flex min-h-screen bg-gray-100">

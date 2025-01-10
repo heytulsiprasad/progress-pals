@@ -5,15 +5,28 @@ import { FiExternalLink } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { auth, db, provider, signInWithPopup } from "../firebaseConfig";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useDispatch } from "react-redux";
+import { setCurrentUser } from "../redux/slices/currentUserSlice";
 
 export default function Home() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleGetStarted = async () => {
     try {
       // Sign in or sign up with Google
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      // Dispatch user data to Redux store
+      dispatch(
+        setCurrentUser({
+          uid: user.uid,
+          name: user.displayName || "Anonymous",
+          email: user.email || "",
+          photoURL: user.photoURL || null,
+        })
+      );
 
       // Check if the user already exists in Firestore
       const userDocRef = doc(db, "users", user.uid);
