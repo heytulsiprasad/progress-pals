@@ -5,7 +5,7 @@ import {
   useCurrentUser,
 } from "../../redux/slices/currentUserSlice";
 import { useState, useRef, useEffect } from "react";
-import { FaCog, FaSignOutAlt } from "react-icons/fa";
+import { FaSignOutAlt } from "react-icons/fa";
 import useOutsideClick from "@/hooks/useOutsideClick";
 import { useDispatch } from "react-redux";
 import { auth, db } from "@/firebaseConfig";
@@ -142,12 +142,12 @@ const Dashboard = () => {
             />
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                <a
+                {/* <a
                   href="/settings"
                   className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   <FaCog className="mr-2" /> Settings
-                </a>
+                </a> */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center w-full px-4 py-2 text-red-500 hover:bg-gray-100"
