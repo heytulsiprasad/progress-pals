@@ -25,6 +25,7 @@ import ChallengeStatusBadge from "@/app/components/ChallengeStatusBadge";
 import { AuditorApplicationModal } from "@/app/components/modals/AuditorApplicationModal";
 import { ReviewSubmissionModal } from "@/app/components/modals/ReviewSubmissionModal";
 import { ApprovalRejectModal } from "@/app/components/modals/ApprovalRejectModal";
+import { PaymentModal } from "@/app/components/modals/PaymentModal";
 
 const ChallengeDetails = () => {
   const { challengeid } = useParams();
@@ -43,6 +44,8 @@ const ChallengeDetails = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -276,10 +279,29 @@ const ChallengeDetails = () => {
     setRejectionReason("");
   };
 
+  const handlePaymentConfirm = async () => {
+    setIsPaymentProcessing(true);
+    // Here you would typically handle the actual payment
+    // For now, we'll just update the challenge status
+    if (challenge) {
+      const challengeRef = doc(db, "challenges", challenge.id);
+      await updateDoc(challengeRef, {
+        isPaid: true,
+      });
+
+      setChallenge((prev) => (prev ? { ...prev, isPaid: true } : null));
+    }
+    setIsPaymentProcessing(false);
+    setIsPaymentModalOpen(false);
+    toast.success("Payment confirmed!");
+  };
+
   const isCreator = challenge.creator === uid;
   const isAuditor = challenge.auditors?.includes(uid);
   const isParticipant = isAuditor || isCreator;
-  const isCompleted = challenge.status === ChallengeStatus.COMPLETED;
+  const isChallengeFinished =
+    challenge.status === ChallengeStatus.COMPLETED ||
+    challenge.status === ChallengeStatus.FAILED;
   const noAuditorExists =
     !challenge.auditors || challenge.auditors.length === 0;
 
@@ -288,14 +310,27 @@ const ChallengeDetails = () => {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           {/* Header Section */}
-          <div className="mb-8">
+          <div className="mb-8 flex justify-between items-center">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {challenge.title}
             </h1>
-            <div className="divider"></div>
-            <p className="text-lg text-base-content/80">
-              {challenge.description}
-            </p>
+            {challenge.status === ChallengeStatus.FAILED &&
+              isCreator &&
+              !challenge.isPaid && (
+                <button
+                  onClick={() => setIsPaymentModalOpen(true)}
+                  className="btn btn-error btn-sm"
+                >
+                  Pay Wager
+                </button>
+              )}
+
+            {/* When paid show a paid label */}
+            {challenge.isPaid && (
+              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md">
+                Paid
+              </span>
+            )}
           </div>
 
           {/* Lock Toggle */}
@@ -306,12 +341,12 @@ const ChallengeDetails = () => {
               className="toggle"
               defaultChecked={isLocked}
               onChange={handleToggleLock}
-              disabled={isCompleted || !isCreator}
+              disabled={isChallengeFinished || !isCreator}
             />
             <div
               className="tooltip ml-2"
               data-tip={
-                isCompleted
+                isChallengeFinished
                   ? "Challenge is already completed"
                   : "When locked people can't see your challenge in open challenges"
               }
@@ -424,7 +459,7 @@ const ChallengeDetails = () => {
           <ProgressSection challenge={challenge} />
 
           {/* Completion Buttons */}
-          {isParticipant && !isCompleted && !noAuditorExists && (
+          {isParticipant && !isChallengeFinished && !noAuditorExists && (
             <div className="mt-8 w-full flex flex-col gap-4">
               <div className="flex gap-4 items-center">
                 <h2 className="text-2xl font-bold">End Challenge</h2>
@@ -542,6 +577,14 @@ const ChallengeDetails = () => {
           onConfirm={handleConfirmReject}
           isLoading={isRejecting}
           type="reject"
+        />
+
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          onConfirmPayment={handlePaymentConfirm}
+          isLoading={isPaymentProcessing}
+          wagerAmount={challenge.wagerAmount}
         />
       </AnimatePresence>
     </div>

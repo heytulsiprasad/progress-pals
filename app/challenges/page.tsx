@@ -3,7 +3,7 @@
 import { useCurrentUser } from "../../redux/slices/currentUserSlice";
 import { useState, useEffect } from "react";
 import { FaPlus } from "react-icons/fa";
-import { Challenge } from "@/types/general";
+import { Challenge, ChallengeStatus } from "@/types/general";
 import { db } from "@/firebaseConfig";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import ChallengeBox from "../components/ChallengeBox";
@@ -48,12 +48,18 @@ const Challenges = () => {
     handleCloseModal();
   };
 
-  const activeChallenges = challenges.filter(
-    (challenge) => challenge.status !== "completed"
+  const activeChallenges = challenges.filter((challenge) =>
+    [
+      ChallengeStatus.IN_PROGRESS,
+      ChallengeStatus.UPCOMING,
+      ChallengeStatus.WAITING_FOR_REVIEW,
+    ].includes(challenge.status)
   ) as unknown as Challenge[];
 
-  const completedChallenges = challenges.filter(
-    (challenge) => challenge.status === "completed"
+  const completedChallenges = challenges.filter((challenge) =>
+    [ChallengeStatus.COMPLETED, ChallengeStatus.FAILED].includes(
+      challenge.status
+    )
   ) as unknown as Challenge[];
 
   return (

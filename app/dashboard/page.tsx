@@ -33,7 +33,6 @@ import toast from "react-hot-toast";
  */
 const Dashboard = () => {
   const { name: userName, uid, photoURL } = useCurrentUser();
-  console.log(uid);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const dispatch = useDispatch();

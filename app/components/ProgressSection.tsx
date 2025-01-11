@@ -85,7 +85,9 @@ export default function ProgressSection({ challenge }: ProgressSectionProps) {
   };
 
   const isCreator = uid === challenge.creator;
-  const isStatusCompleted = challenge.status === ChallengeStatus.COMPLETED;
+  const isChallengeFinished =
+    challenge.status === ChallengeStatus.COMPLETED ||
+    challenge.status === ChallengeStatus.FAILED;
 
   return (
     <div className="mt-8">
@@ -96,7 +98,7 @@ export default function ProgressSection({ challenge }: ProgressSectionProps) {
           <button
             onClick={() => setIsModalOpen(true)}
             className="btn btn-primary btn-sm"
-            disabled={isStatusCompleted}
+            disabled={isChallengeFinished}
           >
             Add Progress
           </button>

@@ -36,6 +36,7 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
       ...challengeData,
       id: "",
       status: ChallengeStatus.UPCOMING,
+      isPaid: false,
       creator: uid,
       startDate: new Date(challengeData.startTime).toISOString(),
       endDate: new Date(challengeData.endTime).toISOString(),

@@ -25,8 +25,9 @@ export interface Challenge {
   progress?: Progress[];
   auditors?: string[];
   pendingAuditors?: string[];
+  isPaid?: boolean;
   locked?: boolean; // if author wants no more auditors
-  creatorReviews: { comment: string; timestamp: string }[];
+  creatorReviews?: { comment: string; timestamp: string }[];
   auditorReviews?: Record<
     string, // Auditor UID
     {
@@ -83,4 +84,9 @@ export interface ReviewModalProps extends BaseModalProps {
 export interface ApprovalRejectModalProps extends BaseModalProps {
   onConfirm: (reason: string) => Promise<void>;
   type: "approve" | "reject";
+}
+
+export interface PaymentModalProps extends BaseModalProps {
+  onConfirmPayment: () => Promise<void>;
+  wagerAmount: number;
 }
