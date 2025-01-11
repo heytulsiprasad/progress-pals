@@ -34,16 +34,12 @@ const ChallengeDetails = () => {
   const { uid, name: userName } = useCurrentUser();
   const [challenge, setChallenge] = useState<Challenge>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [finalComments, setFinalComments] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [approvalReason, setApprovalReason] = useState("");
-  const [rejectionReason, setRejectionReason] = useState("");
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -91,7 +87,7 @@ const ChallengeDetails = () => {
     setIsModalOpen(true);
   };
 
-  const handleApply = async () => {
+  const handleApply = async (message: string) => {
     setIsLoading(true);
     if (challenge) {
       const challengeRef = doc(db, "challenges", challenge.id);
@@ -120,7 +116,6 @@ const ChallengeDetails = () => {
       });
       setIsLoading(false);
       setIsModalOpen(false);
-      setMessage("");
     }
   };
 
@@ -128,7 +123,7 @@ const ChallengeDetails = () => {
     setIsConfirmModalOpen(true);
   };
 
-  const handleConfirmSubmit = async () => {
+  const handleConfirmSubmit = async (finalComments: string) => {
     setIsSubmitting(true);
     const challengeRef = doc(db, "challenges", challenge.id);
 
@@ -170,7 +165,6 @@ const ChallengeDetails = () => {
 
     setIsSubmitting(false);
     setIsConfirmModalOpen(false);
-    setFinalComments("");
   };
 
   const handleApprove = async () => {
@@ -181,7 +175,7 @@ const ChallengeDetails = () => {
     setIsRejectModalOpen(true);
   };
 
-  const handleConfirmApprove = async () => {
+  const handleConfirmApprove = async (approvalReason: string) => {
     setIsApproving(true);
 
     if (challenge) {
@@ -224,10 +218,9 @@ const ChallengeDetails = () => {
 
     setIsApproving(false);
     setIsApproveModalOpen(false);
-    setApprovalReason("");
   };
 
-  const handleConfirmReject = async () => {
+  const handleConfirmReject = async (rejectionReason: string) => {
     setIsRejecting(true);
 
     if (challenge) {
@@ -270,7 +263,6 @@ const ChallengeDetails = () => {
 
     setIsRejecting(false);
     setIsRejectModalOpen(false);
-    setRejectionReason("");
   };
 
   const handlePaymentConfirm = async () => {
@@ -338,6 +330,12 @@ const ChallengeDetails = () => {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Description Section */}
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold mb-2">Description</h2>
+            <p>{challenge.description}</p>
           </div>
 
           <div className="mb-8 flex items-center">

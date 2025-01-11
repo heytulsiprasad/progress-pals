@@ -24,8 +24,6 @@ const ChatModal = ({ isOpen, onClose, challengeId }: ChatModalProps) => {
   const { uid } = useCurrentUser();
   const [error, setError] = useState<string | null>(null);
 
-  console.log(messages);
-
   useEffect(() => {
     if (!isOpen) return;
 

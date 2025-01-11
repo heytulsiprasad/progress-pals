@@ -124,6 +124,7 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
             type="number"
             name="wagerAmount"
             placeholder="Wager Amount"
+            min="0"
             value={challengeData.wagerAmount}
             onChange={handleChange}
             className="input input-bordered w-full"
