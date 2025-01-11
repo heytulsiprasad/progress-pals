@@ -36,6 +36,7 @@ export interface Challenge {
       timestamp: string; // Timestamp of review
     }
   >;
+  chatEnabled?: boolean; // To track if chat is enabled for the challenge
 }
 
 export interface User {
@@ -89,4 +90,16 @@ export interface ApprovalRejectModalProps extends BaseModalProps {
 export interface PaymentModalProps extends BaseModalProps {
   onConfirmPayment: () => Promise<void>;
   wagerAmount: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatModalProps extends BaseModalProps {
+  challengeId: string;
+  participants: string[]; // Array of UIDs (creator + auditors)
 }

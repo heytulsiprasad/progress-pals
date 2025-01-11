@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { db } from "@/firebaseConfig";
 import { FaInfoCircle, FaRegClock } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
+import { IoChatboxOutline } from "react-icons/io5";
 import {
   doc,
   getDoc,
@@ -26,11 +27,12 @@ import { AuditorApplicationModal } from "@/app/components/modals/AuditorApplicat
 import { ReviewSubmissionModal } from "@/app/components/modals/ReviewSubmissionModal";
 import { ApprovalRejectModal } from "@/app/components/modals/ApprovalRejectModal";
 import { PaymentModal } from "@/app/components/modals/PaymentModal";
+import ChatModal from "@/app/components/modals/ChatModal";
 
 const ChallengeDetails = () => {
   const { challengeid } = useParams();
   const { uid, name: userName } = useCurrentUser();
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [challenge, setChallenge] = useState<Challenge>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +48,7 @@ const ChallengeDetails = () => {
   const [isRejecting, setIsRejecting] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -88,19 +91,14 @@ const ChallengeDetails = () => {
     setIsModalOpen(true);
   };
 
-  // Function to handle applying as an auditor
   const handleApply = async () => {
     setIsLoading(true);
     if (challenge) {
-      // Add to pendingAuditors in Challenge
-      // We do this because we can know who all have applied to be auditors
-      // and make the button text "Already applied"
       const challengeRef = doc(db, "challenges", challenge.id);
       await updateDoc(challengeRef, {
         pendingAuditors: arrayUnion(uid),
       });
 
-      // Update local state (challenge)
       setChallenge((prevChallenge) => {
         if (prevChallenge) {
           return {
@@ -126,12 +124,10 @@ const ChallengeDetails = () => {
     }
   };
 
-  // Function to open the modal for sending challenge for review
   const handleMarkComplete = async () => {
     setIsConfirmModalOpen(true);
   };
 
-  // Function to handle sending challenge for review
   const handleConfirmSubmit = async () => {
     setIsSubmitting(true);
     const challengeRef = doc(db, "challenges", challenge.id);
@@ -147,7 +143,6 @@ const ChallengeDetails = () => {
       creatorReviews: newCreatorReviews,
     });
 
-    // Notify auditors
     for (const auditor of challenge.auditors || []) {
       await addDoc(collection(db, "notifications"), {
         recipient: auditor,
@@ -163,7 +158,6 @@ const ChallengeDetails = () => {
       });
     }
 
-    // Update local state
     setChallenge((prev) =>
       prev
         ? {
@@ -171,7 +165,7 @@ const ChallengeDetails = () => {
             status: ChallengeStatus.WAITING_FOR_REVIEW,
             creatorReviews: newCreatorReviews,
           }
-        : null
+        : prev
     );
 
     setIsSubmitting(false);
@@ -224,7 +218,7 @@ const ChallengeDetails = () => {
               status: ChallengeStatus.COMPLETED,
               auditorReviews: newAuditorReviews,
             }
-          : null
+          : prev
       );
     }
 
@@ -270,7 +264,7 @@ const ChallengeDetails = () => {
               status: ChallengeStatus.FAILED,
               auditorReviews: newAuditorReviews,
             }
-          : null
+          : prev
       );
     }
 
@@ -281,15 +275,13 @@ const ChallengeDetails = () => {
 
   const handlePaymentConfirm = async () => {
     setIsPaymentProcessing(true);
-    // Here you would typically handle the actual payment
-    // For now, we'll just update the challenge status
     if (challenge) {
       const challengeRef = doc(db, "challenges", challenge.id);
       await updateDoc(challengeRef, {
         isPaid: true,
       });
 
-      setChallenge((prev) => (prev ? { ...prev, isPaid: true } : null));
+      setChallenge((prev) => (prev ? { ...prev, isPaid: true } : prev));
     }
     setIsPaymentProcessing(false);
     setIsPaymentModalOpen(false);
@@ -309,31 +301,45 @@ const ChallengeDetails = () => {
     <div className="container mx-auto p-6">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          {/* Header Section */}
           <div className="mb-8 flex justify-between items-center">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {challenge.title}
             </h1>
-            {challenge.status === ChallengeStatus.FAILED &&
-              isCreator &&
-              !challenge.isPaid && (
-                <button
-                  onClick={() => setIsPaymentModalOpen(true)}
-                  className="btn btn-error btn-sm"
+
+            <div className="flex items-center gap-4">
+              {isParticipant && (
+                <div
+                  className="tooltip"
+                  data-tip="Chat with challenge participants"
                 >
-                  Pay Wager
-                </button>
+                  <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="btn btn-circle btn-ghost"
+                  >
+                    <IoChatboxOutline className="size-5" />
+                  </button>
+                </div>
               )}
 
-            {/* When paid show a paid label */}
-            {challenge.isPaid && (
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md">
-                Paid
-              </span>
-            )}
+              {challenge.status === ChallengeStatus.FAILED &&
+                isCreator &&
+                !challenge.isPaid && (
+                  <button
+                    onClick={() => setIsPaymentModalOpen(true)}
+                    className="btn btn-error btn-sm"
+                  >
+                    Pay Wager
+                  </button>
+                )}
+
+              {challenge.isPaid && (
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-green-400 to-green-600 text-white shadow-md">
+                  Paid
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Lock Toggle */}
           <div className="mb-8 flex items-center">
             <span className="mr-4">Mark as Locked</span>
             <input
@@ -355,7 +361,6 @@ const ChallengeDetails = () => {
             </div>
           </div>
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 mdmax:grid-cols-1 gap-6">
             <div className="stats shadow">
               <div className="stat">
@@ -376,7 +381,6 @@ const ChallengeDetails = () => {
             </div>
           </div>
 
-          {/* Creator and Auditors Section */}
           <div className="mt-8 grid grid-cols-2 mdmax:grid-cols-1 gap-6">
             <div className="card bg-base-200">
               <div className="card-body">
@@ -390,7 +394,6 @@ const ChallengeDetails = () => {
                 <h3 className="card-title text-xl">Auditors</h3>
 
                 <div className="avatar-group -space-x-6">
-                  {/* When there are no auditors (and is being seen by creator himself) */}
                   {noAuditorExists && isCreator && (
                     <span
                       className={clsx(
@@ -402,7 +405,6 @@ const ChallengeDetails = () => {
                     </span>
                   )}
 
-                  {/* When being seen by any other user */}
                   {!isCreator && noAuditorExists && (
                     <button
                       className={clsx(
@@ -432,7 +434,6 @@ const ChallengeDetails = () => {
             </div>
           </div>
 
-          {/* Timeline Section */}
           <div className="mt-8">
             <div className="card bg-base-200">
               <div className="card-body">
@@ -458,7 +459,6 @@ const ChallengeDetails = () => {
 
           <ProgressSection challenge={challenge} />
 
-          {/* Completion Buttons */}
           {isParticipant && !isChallengeFinished && !noAuditorExists && (
             <div className="mt-8 w-full flex flex-col gap-4">
               <div className="flex gap-4 items-center">
@@ -475,7 +475,6 @@ const ChallengeDetails = () => {
                 </div>
               </div>
 
-              {/* Send for review button only show for creator */}
               {isCreator && (
                 <button
                   onClick={
@@ -504,7 +503,6 @@ const ChallengeDetails = () => {
                 </button>
               )}
 
-              {/* Approve/Reject buttons for auditors */}
               {isAuditor &&
                 challenge.status === ChallengeStatus.WAITING_FOR_REVIEW && (
                   <div className="flex gap-4 w-full">
@@ -545,11 +543,20 @@ const ChallengeDetails = () => {
               )}
             </div>
           )}
+
+          <ChatModal
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+            challengeId={challenge.id}
+            participants={challenge.auditors || []}
+            isLoading={isLoading}
+          />
         </div>
       </div>
 
       <AnimatePresence>
         <AuditorApplicationModal
+          key="auditor-modal"
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onApply={handleApply}
@@ -557,6 +564,7 @@ const ChallengeDetails = () => {
         />
 
         <ReviewSubmissionModal
+          key="review-modal"
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
           onSubmit={handleConfirmSubmit}
@@ -564,6 +572,7 @@ const ChallengeDetails = () => {
         />
 
         <ApprovalRejectModal
+          key="approve-modal"
           isOpen={isApproveModalOpen}
           onClose={() => setIsApproveModalOpen(false)}
           onConfirm={handleConfirmApprove}
@@ -572,6 +581,7 @@ const ChallengeDetails = () => {
         />
 
         <ApprovalRejectModal
+          key="reject-modal"
           isOpen={isRejectModalOpen}
           onClose={() => setIsRejectModalOpen(false)}
           onConfirm={handleConfirmReject}
@@ -580,6 +590,7 @@ const ChallengeDetails = () => {
         />
 
         <PaymentModal
+          key="payment-modal"
           isOpen={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
           onConfirmPayment={handlePaymentConfirm}

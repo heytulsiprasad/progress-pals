@@ -1,11 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to read any user's data
+      allow read: if request.auth != null;
+      
+      // Allow authenticated users to write only their own data
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
+    
     match /challenges/{challengeId} {
-      allow read, write: if request.auth != null;
+      // Allow authenticated users to read challenges
+      allow read: if request.auth != null;
+
+      // Allow only the creator to write challenges
+      allow write: if request.auth != null && request.resource.data.creator == request.auth.uid;
+
+      match /messages/{messageId} {
+        // Allow creator or auditors of the challenge to read/write messages
+        allow read, write: if 
+          request.auth != null &&
+          (
+            get(/databases/$(database)/documents/challenges/$(challengeId)).data.creator == request.auth.uid ||
+            (get(/databases/$(database)/documents/challenges/$(challengeId)).data.auditors != null &&
+             request.auth.uid in get(/databases/$(database)/documents/challenges/$(challengeId)).data.auditors)
+          );
+      }
+    }
+    
+    match /notifications/{notificationId} {
+      // Allow authenticated users to read notifications
+      allow read: if request.auth != null;
+
+      // Allow only the owner to write notifications
+      allow write: if request.auth != null && request.auth.uid == resource.data.owner;
     }
   }
 }
