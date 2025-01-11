@@ -16,9 +16,11 @@ const Challenges = () => {
   const { uid } = useCurrentUser();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchChallenges = async () => {
+      setIsLoading(true);
       const challengesRef = collection(db, "challenges");
       const q = query(challengesRef, where("creator", "==", uid));
       const challengesSnapshot = await getDocs(q);
@@ -27,6 +29,7 @@ const Challenges = () => {
         doc.data()
       ) as Challenge[];
       setChallenges(challengesData);
+      setIsLoading(false);
     };
 
     fetchChallenges();
@@ -65,38 +68,46 @@ const Challenges = () => {
           <FaPlus className="mr-2" /> Create New Challenge
         </button>
       </header>
-      {/* Active Challenges Grid */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">Active Challenges</h2>
-        <div className="grid grid-cols-2 mdmax:grid-cols-2 gap-4">
-          {/* When active challenges are empty */}
-          {activeChallenges.length === 0 && (
-            <div className="text-gray-500 text-left col-span-full">
-              No active challenges yet.
-            </div>
-          )}
-
-          {activeChallenges.map((challenge) => (
-            <ChallengeBox key={challenge.id} challenge={challenge} />
-          ))}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
         </div>
-      </div>
-      {/* Completed Challenges Grid */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">Completed Challenges</h2>
-        <div className="grid grid-cols-2 mdmax:grid-cols-2 gap-4">
-          {/* When completed challenges are empty */}
-          {completedChallenges.length === 0 && (
-            <div className="text-gray-500 text-left col-span-full">
-              No completed challenges yet.
-            </div>
-          )}
+      ) : (
+        <>
+          {/* Active Challenges Grid */}
+          <div>
+            <h2 className="text-xl font-bold mb-4">Active Challenges</h2>
+            <div className="grid grid-cols-2 mdmax:grid-cols-2 gap-4">
+              {/* When active challenges are empty */}
+              {activeChallenges.length === 0 && (
+                <div className="text-gray-500 text-left col-span-full">
+                  No active challenges yet.
+                </div>
+              )}
 
-          {completedChallenges.map((challenge) => (
-            <ChallengeBox key={challenge.id} challenge={challenge} />
-          ))}
-        </div>
-      </div>
+              {activeChallenges.map((challenge) => (
+                <ChallengeBox key={challenge.id} challenge={challenge} />
+              ))}
+            </div>
+          </div>
+          {/* Completed Challenges Grid */}
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4">Completed Challenges</h2>
+            <div className="grid grid-cols-2 mdmax:grid-cols-2 gap-4">
+              {/* When completed challenges are empty */}
+              {completedChallenges.length === 0 && (
+                <div className="text-gray-500 text-left col-span-full">
+                  No completed challenges yet.
+                </div>
+              )}
+
+              {completedChallenges.map((challenge) => (
+                <ChallengeBox key={challenge.id} challenge={challenge} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
       <ChallengeModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

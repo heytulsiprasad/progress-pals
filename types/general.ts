@@ -26,6 +26,14 @@ export interface Challenge {
   auditors?: string[];
   pendingAuditors?: string[];
   locked?: boolean; // if author wants no more auditors
+  creatorReviews: { comment: string; timestamp: string }[];
+  auditorReviews?: Record<
+    string, // Auditor UID
+    {
+      status: "pending" | "approved" | "rejected"; // Review status
+      comment?: string; // Optional feedback
+    }
+  >;
 }
 
 export interface User {
@@ -41,7 +49,8 @@ export enum NotificationType {
   AUDITOR_REQUEST = "auditor_request",
   PROGRESS_UPDATE = "progress_update",
   REVIEW_REQUEST = "review_request",
-  FAILURE_NOTICE = "failure_notice",
+  APPROVAL_NOTICE = "approval_notice",
+  REJECTION_NOTICE = "rejection_notice",
 }
 
 export interface Notification {

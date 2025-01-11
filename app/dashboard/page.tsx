@@ -15,6 +15,7 @@ import ChallengeBox from "../components/ChallengeBox";
 import Image from "next/image";
 import {
   getNotifications,
+  markNotificationAsRead,
   updateNotificationStatus,
 } from "../services/notificationService";
 import NotificationItem from "../components/NotificationItem";
@@ -73,7 +74,7 @@ const Dashboard = () => {
 
   const handleNotificationAction = async (
     notificationId: string,
-    action: "accept" | "reject"
+    action?: "accept" | "reject"
   ) => {
     // Get the notification to find challengeId
     const notificationRef = doc(db, "notifications", notificationId);
@@ -88,24 +89,38 @@ const Dashboard = () => {
         pendingAuditors: arrayRemove(notification.author),
       });
 
-      // If accepted, add to auditors
-      if (action === "accept") {
-        await updateDoc(challengeRef, {
-          auditors: arrayUnion(notification.author),
-        });
+      if (action) {
+        // If accepted, add to auditors
+        if (action === "accept") {
+          await updateDoc(challengeRef, {
+            auditors: arrayUnion(notification.author),
+          });
+        }
+
+        // Update notification status
+        await updateNotificationStatus(notificationId, action);
+
+        // Update local state
+        setNotifications(
+          (notifications ?? []).filter((n) => n.id !== notificationId)
+        );
+
+        // Send toast
+        if (action === "accept") {
+          toast.success("Auditor request accepted!");
+        } else {
+          toast.error("Auditor request rejected!");
+        }
       }
 
-      // Update notification status
-      await updateNotificationStatus(notificationId, action);
-
-      // Update local state
-      setNotifications(notifications.filter((n) => n.id !== notificationId));
-
-      // Send toast
-      if (action === "accept") {
-        toast.success("Auditor request accepted!");
-      } else {
-        toast.error("Auditor request rejected!");
+      // When normal notification just mark as read
+      else {
+        await markNotificationAsRead(notificationId);
+        setNotifications(
+          (notifications ?? []).map((n) =>
+            n.id === notificationId ? { ...n, read: true } : n
+          )
+        );
       }
     }
   };

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { updateDoc, doc } from "firebase/firestore";
-import { Challenge, Progress } from "@/types/general";
+import { Challenge, ChallengeStatus, Progress } from "@/types/general";
 import { db } from "@/firebaseConfig";
 import { useCurrentUser } from "@/redux/slices/currentUserSlice";
 
@@ -84,15 +84,19 @@ export default function ProgressSection({ challenge }: ProgressSectionProps) {
     }
   };
 
+  const isCreator = uid === challenge.creator;
+  const isStatusCompleted = challenge.status === ChallengeStatus.COMPLETED;
+
   return (
     <div className="mt-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Progress Images</h2>
         {/* When user is creator, then show add progress button */}
-        {uid === challenge.creator && (
+        {isCreator && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="btn btn-primary btn-sm"
+            disabled={isStatusCompleted}
           >
             Add Progress
           </button>

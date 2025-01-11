@@ -129,7 +129,7 @@ const ChallengeModal = ({ isOpen, onClose, onSubmit }: ChallengeModalProps) => {
           />
         </div>
         <div className="flex justify-end">
-          <button onClick={onClose} className="btn btn-secondary mr-2">
+          <button onClick={onClose} className="btn btn-error btn-outline mr-2">
             Cancel
           </button>
           <button

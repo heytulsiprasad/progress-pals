@@ -30,3 +30,8 @@ export const updateNotificationStatus = async (
   const notificationRef = doc(db, "notifications", notificationId);
   await updateDoc(notificationRef, { status: action, read: true });
 };
+
+export const markNotificationAsRead = async (notificationId: string) => {
+  const notificationRef = doc(db, "notifications", notificationId);
+  await updateDoc(notificationRef, { read: true });
+};

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { db } from "@/firebaseConfig";
-import { FaInfoCircle } from "react-icons/fa";
+import { FaInfoCircle, FaRegClock } from "react-icons/fa";
+import { IoMdSend } from "react-icons/io";
 import {
   doc,
   getDoc,
@@ -19,6 +20,9 @@ import clsx from "clsx";
 import { useCurrentUser } from "@/redux/slices/currentUserSlice";
 import Modal from "@/app/components/Modal"; // Assuming you have a Modal component
 import { AnimatePresence, motion } from "framer-motion";
+import { format } from "date-fns";
+import toast from "react-hot-toast";
+import ChallengeStatusBadge from "@/app/components/ChallengeStatusBadge";
 
 const ChallengeDetails = () => {
   const { challengeid } = useParams();
@@ -28,6 +32,15 @@ const ChallengeDetails = () => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [finalComments, setFinalComments] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [approvalReason, setApprovalReason] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -70,6 +83,7 @@ const ChallengeDetails = () => {
     setIsModalOpen(true);
   };
 
+  // Function to handle applying as an auditor
   const handleApply = async () => {
     setIsLoading(true);
     if (challenge) {
@@ -107,10 +121,25 @@ const ChallengeDetails = () => {
     }
   };
 
+  // Function to open the modal for sending challenge for review
   const handleMarkComplete = async () => {
+    setIsConfirmModalOpen(true);
+  };
+
+  // Function to handle sending challenge for review
+  const handleConfirmSubmit = async () => {
+    setIsSubmitting(true);
     const challengeRef = doc(db, "challenges", challenge.id);
+
+    const newCreatorReviews = challenge.creatorReviews || [];
+    newCreatorReviews.push({
+      comment: finalComments,
+      timestamp: new Date().toISOString(),
+    });
+
     await updateDoc(challengeRef, {
       status: ChallengeStatus.WAITING_FOR_REVIEW,
+      creatorReviews: newCreatorReviews,
     });
 
     // Notify auditors
@@ -118,7 +147,11 @@ const ChallengeDetails = () => {
       await addDoc(collection(db, "notifications"), {
         recipient: auditor,
         author: uid,
-        message: `${userName} has completed the challenge "${challenge.title}" and is waiting for review.`,
+        message: `${userName} has completed the challenge "${
+          challenge.title
+        }" and is waiting for review. ${
+          finalComments && `Comments: ${finalComments}`
+        }`,
         type: NotificationType.REVIEW_REQUEST,
         read: false,
         challengeId: challenge.id,
@@ -131,39 +164,120 @@ const ChallengeDetails = () => {
         ? {
             ...prev,
             status: ChallengeStatus.WAITING_FOR_REVIEW,
+            creatorReviews: newCreatorReviews,
           }
         : null
     );
+
+    setIsSubmitting(false);
+    setIsConfirmModalOpen(false);
+    setFinalComments("");
   };
 
-  const handleMarkFailed = async () => {
-    const challengeRef = doc(db, "challenges", challenge.id);
-    await updateDoc(challengeRef, {
-      status: ChallengeStatus.FAILED,
-    });
+  const handleApprove = async () => {
+    setIsApproveModalOpen(true);
+  };
 
-    // Notify auditors
-    for (const auditor of challenge.auditors || []) {
+  const handleReject = async () => {
+    setIsRejectModalOpen(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    setIsApproving(true);
+
+    if (challenge) {
+      const challengeRef = doc(db, "challenges", challenge.id);
+
+      const newAuditorReviews = challenge.auditorReviews || {};
+
+      newAuditorReviews[uid] = {
+        status: "approved",
+        comment: approvalReason,
+      };
+
+      await updateDoc(challengeRef, {
+        status: ChallengeStatus.COMPLETED,
+        auditorReviews: newAuditorReviews,
+      });
+
       await addDoc(collection(db, "notifications"), {
-        recipient: auditor,
+        recipient: challenge.creator,
         author: uid,
-        message: `${userName} has marked the challenge "${challenge.title}" as failed.`,
-        type: NotificationType.FAILURE_NOTICE,
+        message: `Your challenge "${challenge.title}" has been approved. ${
+          approvalReason && `Review: ${approvalReason}`
+        }`,
+        type: NotificationType.APPROVAL_NOTICE,
         read: false,
         challengeId: challenge.id,
       });
+
+      setChallenge((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: ChallengeStatus.COMPLETED,
+              auditorReviews: newAuditorReviews,
+            }
+          : null
+      );
     }
 
-    // Update local state
-    setChallenge((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: ChallengeStatus.FAILED,
-          }
-        : null
-    );
+    setIsApproving(false);
+    setIsApproveModalOpen(false);
+    setApprovalReason("");
   };
+
+  const handleConfirmReject = async () => {
+    setIsRejecting(true);
+
+    if (challenge) {
+      const challengeRef = doc(db, "challenges", challenge.id);
+
+      const newAuditorReviews = challenge.auditorReviews || {};
+
+      newAuditorReviews[uid] = {
+        status: "rejected",
+        comment: rejectionReason,
+      };
+
+      await updateDoc(challengeRef, {
+        status: ChallengeStatus.FAILED,
+        auditorReviews: newAuditorReviews,
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        recipient: challenge.creator,
+        author: uid,
+        message: `Your challenge "${challenge.title}" has been rejected. ${
+          rejectionReason && `Reason: ${rejectionReason}`
+        }`,
+        type: NotificationType.REJECTION_NOTICE,
+        read: false,
+        challengeId: challenge.id,
+      });
+
+      setChallenge((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: ChallengeStatus.FAILED,
+              auditorReviews: newAuditorReviews,
+            }
+          : null
+      );
+    }
+
+    setIsRejecting(false);
+    setIsRejectModalOpen(false);
+    setRejectionReason("");
+  };
+
+  const isCreator = challenge.creator === uid;
+  const isAuditor = challenge.auditors?.includes(uid);
+  const isParticipant = isAuditor || isCreator;
+  const isCompleted = challenge.status === ChallengeStatus.COMPLETED;
+  const noAuditorExists =
+    !challenge.auditors || challenge.auditors.length === 0;
 
   return (
     <div className="container mx-auto p-6">
@@ -188,10 +302,15 @@ const ChallengeDetails = () => {
               className="toggle"
               defaultChecked={isLocked}
               onChange={handleToggleLock}
+              disabled={isCompleted || !isCreator}
             />
             <div
               className="tooltip ml-2"
-              data-tip="When locked people can't see your challenge in open challenges"
+              data-tip={
+                isCompleted
+                  ? "Challenge is already completed"
+                  : "When locked people can't see your challenge in open challenges"
+              }
             >
               <FaInfoCircle className="text-primary" />
             </div>
@@ -212,17 +331,7 @@ const ChallengeDetails = () => {
               <div className="stat">
                 <div className="stat-title">Status</div>
                 <div className="stat-value">
-                  <span
-                    className={`badge badge-lg ${
-                      challenge.status === ChallengeStatus.IN_PROGRESS
-                        ? "badge-primary"
-                        : challenge.status === ChallengeStatus.COMPLETED
-                        ? "badge-success"
-                        : "badge-error"
-                    }`}
-                  >
-                    {challenge.status}
-                  </span>
+                  <ChallengeStatusBadge status={challenge.status} />
                 </div>
               </div>
             </div>
@@ -243,29 +352,28 @@ const ChallengeDetails = () => {
 
                 <div className="avatar-group -space-x-6">
                   {/* When there are no auditors (and is being seen by creator himself) */}
-                  {(!challenge?.auditors ||
-                    challenge?.auditors?.length === 0) &&
-                    challenge.creator === uid && (
-                      <span
-                        className={clsx(
-                          "px-2 py-1 rounded-full text-sm font-medium",
-                          "bg-green-100 text-green-700"
-                        )}
-                      >
-                        Looking for auditors
-                      </span>
-                    )}
+                  {noAuditorExists && isCreator && (
+                    <span
+                      className={clsx(
+                        "px-2 py-1 rounded-full text-sm font-medium",
+                        "bg-green-100 text-green-700"
+                      )}
+                    >
+                      Looking for auditors
+                    </span>
+                  )}
 
                   {/* When being seen by any other user */}
-                  {!challenge?.auditors && challenge.creator !== uid && (
+                  {!isCreator && noAuditorExists && (
                     <button
                       className={clsx(
                         "btn btn-sm",
                         challenge?.pendingAuditors?.includes(uid)
-                          ? "btn-secondary"
+                          ? "btn-secondary btn-outline"
                           : "btn-primary "
                       )}
                       onClick={handleApplyAsAuditor}
+                      disabled={challenge?.pendingAuditors?.includes(uid)}
                     >
                       {challenge?.pendingAuditors?.includes(uid)
                         ? "Already applied"
@@ -292,7 +400,7 @@ const ChallengeDetails = () => {
                 <h2 className="card-title text-xl mb-4">Challenge Timeline</h2>
                 <ul className="steps steps-vertical lg:steps-horizontal w-full">
                   <li className="step step-primary">
-                    Start: {new Date(challenge.startDate).toLocaleDateString()}
+                    Start: {format(new Date(challenge.startDate), "PPPP")}
                   </li>
                   <li className="step">In Progress</li>
                   <li
@@ -302,7 +410,7 @@ const ChallengeDetails = () => {
                         : ""
                     }`}
                   >
-                    End: {new Date(challenge.endDate).toLocaleDateString()}
+                    End: {format(new Date(challenge.endDate), "PPPP")}
                   </li>
                 </ul>
               </div>
@@ -312,24 +420,79 @@ const ChallengeDetails = () => {
           <ProgressSection challenge={challenge} />
 
           {/* Completion Buttons */}
-          <div className="mt-8 grid grid-cols-2 gap-4">
-            <button
-              onClick={handleMarkComplete}
-              className={clsx(
-                "btn",
-                challenge.status === ChallengeStatus.WAITING_FOR_REVIEW
-                  ? "btn-primary"
-                  : "btn-success"
+          {isParticipant && !isCompleted && !noAuditorExists && (
+            <div className="mt-8 w-full flex flex-col gap-4">
+              <div className="flex gap-4 items-center">
+                <h2 className="text-2xl font-bold">End Challenge</h2>
+                <div
+                  className="tooltip"
+                  data-tip={
+                    isCreator
+                      ? "If you want to end the challenge, send it for review once it'll be accepted by all auditors only then it'll be marked as complete"
+                      : "If you approve challenge gets done, if you reject it'll be failed"
+                  }
+                >
+                  <FaInfoCircle className="text-primary" />
+                </div>
+              </div>
+
+              {/* Send for review button only show for creator */}
+              {isCreator && (
+                <button
+                  onClick={
+                    challenge.status === ChallengeStatus.WAITING_FOR_REVIEW
+                      ? () => toast.error("Challenge already sent for review")
+                      : handleMarkComplete
+                  }
+                  className={clsx(
+                    "w-full btn btn-outline flex-row-reverse items-center justify-center hover:scale-105",
+                    challenge.status === ChallengeStatus.WAITING_FOR_REVIEW
+                      ? "btn-primary"
+                      : "btn-success"
+                  )}
+                >
+                  {challenge.status === ChallengeStatus.WAITING_FOR_REVIEW ? (
+                    <>
+                      <FaRegClock className="size-4" />
+                      <span>Waiting for Review</span>
+                    </>
+                  ) : (
+                    <>
+                      <IoMdSend className="size-4" />
+                      <span>Send for Review</span>
+                    </>
+                  )}
+                </button>
               )}
-            >
-              {challenge.status === ChallengeStatus.WAITING_FOR_REVIEW
-                ? "Waiting for Review"
-                : "Mark as Complete"}
-            </button>
-            <button onClick={handleMarkFailed} className="btn btn-error">
-              Mark as Failed
-            </button>
-          </div>
+
+              {/* Approve/Reject buttons for auditors */}
+              {isAuditor &&
+                challenge.status === ChallengeStatus.WAITING_FOR_REVIEW && (
+                  <div className="flex gap-4 w-full">
+                    <button
+                      onClick={handleApprove}
+                      className="btn btn-success flex-grow"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={handleReject}
+                      className="btn btn-error flex-grow"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+
+              {isAuditor &&
+                challenge.status !== ChallengeStatus.WAITING_FOR_REVIEW && (
+                  <div className="text-left text-sm text-gray-500">
+                    You can approve/reject here once the creator sends for
+                    review
+                  </div>
+                )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -360,6 +523,126 @@ const ChallengeDetails = () => {
               >
                 {isLoading ? "Applying..." : "Apply"}
               </button>
+            </motion.div>
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Modal for confirming review submission */}
+      <AnimatePresence>
+        {isConfirmModalOpen && (
+          <Modal onClose={() => setIsConfirmModalOpen(false)}>
+            <motion.div
+              className="p-4"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold mb-4">Confirm Submission</h2>
+              <textarea
+                className="w-full p-2 border rounded mb-4"
+                placeholder="Add final comments (optional)"
+                value={finalComments}
+                onChange={(e) => setFinalComments(e.target.value)}
+              />
+              <div className="flex justify-end gap-4">
+                <button
+                  className="btn btn-outline btn-error"
+                  onClick={() => setIsConfirmModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={clsx("btn btn-primary", {
+                    "btn-loading": isSubmitting,
+                  })}
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit"}
+                </button>
+              </div>
+            </motion.div>
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Modal for approving challenge */}
+      <AnimatePresence>
+        {isApproveModalOpen && (
+          <Modal onClose={() => setIsApproveModalOpen(false)}>
+            <motion.div
+              className="p-4"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold mb-4">Approve Challenge</h2>
+              <textarea
+                className="w-full p-2 border rounded mb-4"
+                placeholder="Add approval reason (optional)"
+                value={approvalReason}
+                onChange={(e) => setApprovalReason(e.target.value)}
+              />
+              <div className="flex justify-end gap-4">
+                <button
+                  className="btn btn-outline btn-error"
+                  onClick={() => setIsApproveModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={clsx("btn btn-primary", {
+                    "btn-loading": isApproving,
+                  })}
+                  onClick={handleConfirmApprove}
+                  disabled={isApproving}
+                >
+                  {isApproving ? "Approving..." : "Approve"}
+                </button>
+              </div>
+            </motion.div>
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Modal for rejecting challenge */}
+      <AnimatePresence>
+        {isRejectModalOpen && (
+          <Modal onClose={() => setIsRejectModalOpen(false)}>
+            <motion.div
+              className="p-4"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold mb-4">Reject Challenge</h2>
+              <textarea
+                className="w-full p-2 border rounded mb-4"
+                placeholder="Add rejection reason (optional)"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              />
+              <div className="flex justify-end gap-4">
+                <button
+                  className="btn btn-outline btn-error"
+                  onClick={() => setIsRejectModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={clsx("btn btn-primary", {
+                    "btn-loading": isRejecting,
+                  })}
+                  onClick={handleConfirmReject}
+                  disabled={isRejecting}
+                >
+                  {isRejecting ? "Rejecting..." : "Reject"}
+                </button>
+              </div>
             </motion.div>
           </Modal>
         )}

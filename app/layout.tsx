@@ -33,7 +33,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster />
+        <Toaster position="bottom-right" gutter={8} />
         <ReduxProvider>
           <PersistGate loading={null} persistor={persistor}>
             {children}
