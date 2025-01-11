@@ -18,11 +18,13 @@ import ProgressSection from "@/app/components/ProgressSection";
 import UserAvatar from "@/app/components/UserAvatar";
 import clsx from "clsx";
 import { useCurrentUser } from "@/redux/slices/currentUserSlice";
-import Modal from "@/app/components/Modal"; // Assuming you have a Modal component
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import ChallengeStatusBadge from "@/app/components/ChallengeStatusBadge";
+import { AuditorApplicationModal } from "@/app/components/modals/AuditorApplicationModal";
+import { ReviewSubmissionModal } from "@/app/components/modals/ReviewSubmissionModal";
+import { ApprovalRejectModal } from "@/app/components/modals/ApprovalRejectModal";
 
 const ChallengeDetails = () => {
   const { challengeid } = useParams();
@@ -193,6 +195,7 @@ const ChallengeDetails = () => {
       newAuditorReviews[uid] = {
         status: "approved",
         comment: approvalReason,
+        timestamp: new Date().toISOString(),
       };
 
       await updateDoc(challengeRef, {
@@ -238,6 +241,7 @@ const ChallengeDetails = () => {
       newAuditorReviews[uid] = {
         status: "rejected",
         comment: rejectionReason,
+        timestamp: new Date().toISOString(),
       };
 
       await updateDoc(challengeRef, {
@@ -485,167 +489,60 @@ const ChallengeDetails = () => {
                 )}
 
               {isAuditor &&
-                challenge.status !== ChallengeStatus.WAITING_FOR_REVIEW && (
+                (challenge.status === ChallengeStatus.IN_PROGRESS ||
+                  challenge.status === ChallengeStatus.UPCOMING) && (
                   <div className="text-left text-sm text-gray-500">
                     You can approve/reject here once the creator sends for
                     review
                   </div>
                 )}
+
+              {isAuditor && challenge.status === ChallengeStatus.FAILED && (
+                <div className="text-left text-sm text-gray-500">
+                  You have marked as failed.
+                </div>
+              )}
+
+              {isAuditor && challenge.status === ChallengeStatus.COMPLETED && (
+                <div className="text-left text-sm text-gray-500">
+                  You have approved the challenge.
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal for applying as auditor */}
       <AnimatePresence>
-        {isModalOpen && (
-          <Modal onClose={() => setIsModalOpen(false)}>
-            <motion.div
-              className="p-4"
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h2 className="text-xl font-bold mb-4">Apply as Auditor</h2>
-              <textarea
-                className="w-full p-2 border rounded mb-4"
-                placeholder="Add a message (optional)"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <button
-                className={clsx("btn btn-primary", {
-                  "btn-loading": isLoading,
-                })}
-                onClick={handleApply}
-                disabled={isLoading}
-              >
-                {isLoading ? "Applying..." : "Apply"}
-              </button>
-            </motion.div>
-          </Modal>
-        )}
-      </AnimatePresence>
+        <AuditorApplicationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onApply={handleApply}
+          isLoading={isLoading}
+        />
 
-      {/* Modal for confirming review submission */}
-      <AnimatePresence>
-        {isConfirmModalOpen && (
-          <Modal onClose={() => setIsConfirmModalOpen(false)}>
-            <motion.div
-              className="p-4"
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h2 className="text-xl font-bold mb-4">Confirm Submission</h2>
-              <textarea
-                className="w-full p-2 border rounded mb-4"
-                placeholder="Add final comments (optional)"
-                value={finalComments}
-                onChange={(e) => setFinalComments(e.target.value)}
-              />
-              <div className="flex justify-end gap-4">
-                <button
-                  className="btn btn-outline btn-error"
-                  onClick={() => setIsConfirmModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className={clsx("btn btn-primary", {
-                    "btn-loading": isSubmitting,
-                  })}
-                  onClick={handleConfirmSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit"}
-                </button>
-              </div>
-            </motion.div>
-          </Modal>
-        )}
-      </AnimatePresence>
+        <ReviewSubmissionModal
+          isOpen={isConfirmModalOpen}
+          onClose={() => setIsConfirmModalOpen(false)}
+          onSubmit={handleConfirmSubmit}
+          isLoading={isSubmitting}
+        />
 
-      {/* Modal for approving challenge */}
-      <AnimatePresence>
-        {isApproveModalOpen && (
-          <Modal onClose={() => setIsApproveModalOpen(false)}>
-            <motion.div
-              className="p-4"
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h2 className="text-xl font-bold mb-4">Approve Challenge</h2>
-              <textarea
-                className="w-full p-2 border rounded mb-4"
-                placeholder="Add approval reason (optional)"
-                value={approvalReason}
-                onChange={(e) => setApprovalReason(e.target.value)}
-              />
-              <div className="flex justify-end gap-4">
-                <button
-                  className="btn btn-outline btn-error"
-                  onClick={() => setIsApproveModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className={clsx("btn btn-primary", {
-                    "btn-loading": isApproving,
-                  })}
-                  onClick={handleConfirmApprove}
-                  disabled={isApproving}
-                >
-                  {isApproving ? "Approving..." : "Approve"}
-                </button>
-              </div>
-            </motion.div>
-          </Modal>
-        )}
-      </AnimatePresence>
+        <ApprovalRejectModal
+          isOpen={isApproveModalOpen}
+          onClose={() => setIsApproveModalOpen(false)}
+          onConfirm={handleConfirmApprove}
+          isLoading={isApproving}
+          type="approve"
+        />
 
-      {/* Modal for rejecting challenge */}
-      <AnimatePresence>
-        {isRejectModalOpen && (
-          <Modal onClose={() => setIsRejectModalOpen(false)}>
-            <motion.div
-              className="p-4"
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.3 }}
-            >
-              <h2 className="text-xl font-bold mb-4">Reject Challenge</h2>
-              <textarea
-                className="w-full p-2 border rounded mb-4"
-                placeholder="Add rejection reason (optional)"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-              />
-              <div className="flex justify-end gap-4">
-                <button
-                  className="btn btn-outline btn-error"
-                  onClick={() => setIsRejectModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className={clsx("btn btn-primary", {
-                    "btn-loading": isRejecting,
-                  })}
-                  onClick={handleConfirmReject}
-                  disabled={isRejecting}
-                >
-                  {isRejecting ? "Rejecting..." : "Reject"}
-                </button>
-              </div>
-            </motion.div>
-          </Modal>
-        )}
+        <ApprovalRejectModal
+          isOpen={isRejectModalOpen}
+          onClose={() => setIsRejectModalOpen(false)}
+          onConfirm={handleConfirmReject}
+          isLoading={isRejecting}
+          type="reject"
+        />
       </AnimatePresence>
     </div>
   );

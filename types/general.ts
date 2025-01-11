@@ -32,6 +32,7 @@ export interface Challenge {
     {
       status: "pending" | "approved" | "rejected"; // Review status
       comment?: string; // Optional feedback
+      timestamp: string; // Timestamp of review
     }
   >;
 }
@@ -63,4 +64,23 @@ export interface Notification {
   createdAt: string; // Timestamp of the notification
   read: boolean; // Whether the notification has been read
   status?: string;
+}
+
+export interface BaseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isLoading: boolean;
+}
+
+export interface AuditorModalProps extends BaseModalProps {
+  onApply: (message: string) => Promise<void>;
+}
+
+export interface ReviewModalProps extends BaseModalProps {
+  onSubmit: (comments: string) => Promise<void>;
+}
+
+export interface ApprovalRejectModalProps extends BaseModalProps {
+  onConfirm: (reason: string) => Promise<void>;
+  type: "approve" | "reject";
 }
